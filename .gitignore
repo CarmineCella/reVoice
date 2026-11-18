@@ -1,0 +1,10 @@
+.DS_Store
+Thumbs.db
+.svn/
+/build*/
+/out/
+/dist/
+/CMakeUserPresets.json
+*.user
+*.dSYM/
+
