@@ -1,0 +1,41 @@
+<area shape="rect" href="$classSignalTable.html" title="Base class for all the tables." alt="" coords="431,6,524,32">
+<area shape="rect" href="$classEnvelope.html" title="Base class for the envelopes." alt="" coords="651,6,728,32">
+<area shape="rect" href="$classSoundObject.html" title="Base class for all the generators." alt="" coords="5,360,107,387">
+<area shape="rect" href="$classRose.html" title="Realtime oriented sound engine (R.o.s.e.)." alt="" coords="241,234,295,260">
+<area shape="rect" href="$classSoundGenerator.html" title="Base class for all the generators." alt="" coords="191,284,345,311">
+<area shape="rect" href="$classSoundGenerator.html" title="SoundGenerator\&lt; double \&gt;" alt="" coords="175,335,361,362">
+<area shape="rect" href="$classSoundGenerator.html" title="SoundGenerator\&lt; SoundFrame \&gt;" alt="" coords="155,386,381,412">
+<area shape="rect" href="$classSoundProcessor.html" title="Base class for all the processors." alt="" coords="191,436,345,463">
+<area shape="rect" href="$classSoundProcessor.html" title="SoundProcessor\&lt; double \&gt;" alt="" coords="175,575,361,602">
+<area shape="rect" href="$classSoundUnit.html" title="Base class for the unit generators." alt="" coords="435,132,520,159">
+<area shape="rect" href="$classAbstractOscillator.html" title="Base class for all the oscillators." alt="" coords="624,56,755,83">
+<area shape="rect" href="$classPulseGenerator.html" title="A class to generate a pulse train." alt="" coords="631,107,748,134">
+<area shape="rect" href="$classRangedRandomNumberGenerator.html" title="RangedRandomNumberGenerator returns random numbers in [min, max]." alt="" coords="575,158,804,184">
+<area shape="rect" href="$classUnitRandomNumberGenerator.html" title="UnitRandomNumberGenerator returns random numbers from 0. to 1." alt="" coords="585,208,793,235">
+<area shape="rect" href="$classFMOscillator.html" title="Oscillator for frequency modulation." alt="" coords="872,6,971,32">
+<area shape="rect" href="$classGranularOscillator.html" title="Oscillator for single&#45;grain generation." alt="" coords="855,56,988,83">
+<area shape="rect" href="$classLoopOscillator.html" title="Interpolated oscillator class." alt="" coords="867,107,976,134">
+<area shape="rect" href="$classSoundEvent.html" title="Base class for the musical events." alt="" coords="429,386,525,412">
+<area shape="rect" href="$classAbstractGranulator.html" title="Base class for all the granulators." alt="" coords="620,259,759,286">
+<area shape="rect" href="$classAbstractSpectrum.html" title="Generic spectrum interface." alt="" coords="624,310,755,336">
+<area shape="rect" href="$classCrossFade.html" title="Symmetric cross&#45;fade between two sources." alt="" coords="645,360,733,387">
+<area shape="rect" href="$classHarmonizer.html" title="Signal harmonizer." alt="" coords="643,411,736,438">
+<area shape="rect" href="$classPitchShifter.html" title="Pitch shifter based on synchronous granular synthesis." alt="" coords="644,462,735,488">
+<area shape="rect" href="$classTimeline.html" title="This class represents the time line. It schedules SoundEvent objects." alt="" coords="653,512,725,539">
+<area shape="rect" href="$classTableGranulator.html" title="Main class for granular synthesis." alt="" coords="861,259,981,286">
+<area shape="rect" href="$classSpectrumDesigner.html" title="Additive synthesizer by mean of spectral design." alt="" coords="855,310,988,336">
+<area shape="rect" href="$classSoundEffect.html" title="Base class for the effects." alt="" coords="429,664,525,691">
+<area shape="rect" href="$classAbstractFilter.html" title="Base class for all the filters." alt="" coords="637,563,741,590">
+<area shape="rect" href="$classAbstractPitchDetector.html" title="Base class for all the pitch detectors." alt="" coords="612,664,767,691">
+<area shape="rect" href="$classExponator.html" title="Exponator" alt="" coords="648,715,731,742">
+<area shape="rect" href="$classRenoise.html" title="Noise modulation effect." alt="" coords="653,766,725,792">
+<area shape="rect" href="$classBiQuad.html" title="2nd order LP/HP filter (IIR, 12dB/oct)" alt="" coords="888,436,955,463">
+<area shape="rect" href="$classDCBlocker.html" title="Basic DC blocker." alt="" coords="879,487,964,514">
+<area shape="rect" href="$classTone.html" title="Simple 1st order LP filter (IIR, 6dB/oct)." alt="" coords="895,538,948,564">
+<area shape="rect" href="$classVariState.html" title="Chamberlin variable state filter (IIR, 12dB/oct)." alt="" coords="883,588,960,615">
+<area shape="rect" href="$classEnvelopeFollower.html" title="Basic envelope follower with adjustable feedback." alt="" coords="1037,512,1168,539">
+<area shape="rect" href="$classZeroCrossings.html" title="Zero crossings counter class." alt="" coords="1048,563,1157,590">
+<area shape="rect" href="$classAdaptiveEstimator.html" title="Pitch detector based on adaptive tuning." alt="" coords="855,639,988,666">
+<area shape="rect" href="$classPeriodEstimator.html" title="Basic pitch detector based on the Fundamental Period Mesurement." alt="" coords="861,690,981,716">
+<area shape="rect" href="$classSpectralEstimator.html" title="Basic pitch detector based on the Fast Fourier Transform." alt="" coords="856,740,987,767">
+<area shape="rect" href="$classWaveletEstimator.html" title="Pitch detector based on the discrete wavelet transform (DWT)." alt="" coords="856,791,987,818">

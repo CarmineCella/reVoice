@@ -1,0 +1,13 @@
+/*! \page rose A simple realtime example
+
+The following code shows a simple example on how to use realtime I/O using Rose.
+
+\include roseTest.cpp
+
+<H3>References</H3>
+<UL>
+<LI><A HREF="http://www.cryptosound.org">www.cryptosound.org</A></LI>
+<BR>
+This is a link to the Pandora web page. You can find here the latest version of the framework and many other tools.
+</UL>
+*/

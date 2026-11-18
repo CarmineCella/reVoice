@@ -1,0 +1,41 @@
+/*! \mainpage [Pandora audio framework]
+
+The <B>Pandora audio framework</B> is a set of classes written in C++ to perform digital audio sythesis. 
+
+It provides some unit generators (UG) useful to build complex generation algorithms as, for example
+
+LoopOscillator, Envelope, VariState, and so on.
+
+The framework can be used to generate sound in realtime, through the Rose and Remi classes
+
+based respectively on Portaudio and on Portmidi, or to build complex scores through
+
+the powerful Timeline class. A major feature of the framework are the powerful pitch detectors, like
+
+PeriodEstimator and WaveletEstimator which can be used with the Harmonizer class or the PitchShifter class
+
+to perform complex effects on monophonic signals.
+
+The class TableGranulator implements a complex granular synthesizer to create asynchronous,
+
+synchronous and glisson synthesis.
+
+
+-# \ref license
+
+-# \ref timeline
+-# \ref rose
+
+-# \ref remi
+
+-# \ref pdtest
+
+
+*/
+
+<P>
+<FONT SIZE=-1>
+The Pandora Audio Framework has been written by <B> Carmine E. Cella </B> in 2004/2008.
+
+</FONT>
+

@@ -1,0 +1,17 @@
+/*! \page pdtest A pitch detector implemented
+
+The following code shows an example on how to use the pitch detectors implemented in Pandora: PeriodEstimator, WaveletEstimator, ecc.
+
+
+\include pdTest.cpp
+
+
+<H3>References</H3>
+<UL>
+
+<LI><A HREF="http://www.cryptosound.org">www.cryptosound.org</A></LI>
+<BR>
+This is a link to the Pandora web page. You can find here the latest version of the framework and many other tools.
+</UL>
+*/
+
