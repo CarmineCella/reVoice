@@ -1,0 +1,119 @@
+name: Build, test, and package
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  desktop:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Linux x86_64
+            runner: ubuntu-22.04
+            artifact: linux-x86_64
+          - name: Windows x64
+            runner: windows-2022
+            artifact: windows-x64
+          - name: macOS Apple Silicon
+            runner: macos-15
+            artifact: macos-arm64
+          - name: macOS Intel
+            runner: macos-15-intel
+            artifact: macos-x86_64
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Install Linux build dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libasound2-dev libx11-dev libxext-dev libxft-dev libxinerama-dev libxcursor-dev libxfixes-dev libxrender-dev xvfb xauth
+      - name: Configure
+        run: cmake --preset default
+      - name: Build
+        run: cmake --build --preset default --parallel 3
+      - name: Test DSP, recording, and real-time behavior
+        run: ctest --preset default --parallel 3
+      - name: Smoke test Linux interface
+        if: runner.os == 'Linux'
+        run: xvfb-run -a build/release/app/reVoice --smoke-test
+      - name: Smoke test macOS interface
+        if: runner.os == 'macOS'
+        run: build/release/app/reVoice.app/Contents/MacOS/reVoice --smoke-test
+      - name: Smoke test Windows interface
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $process = Start-Process -FilePath build/release/app/Release/reVoice.exe -ArgumentList '--smoke-test' -Wait -PassThru
+          if ($process.ExitCode -ne 0) { exit $process.ExitCode }
+      - name: Package
+        run: cpack --config build/release/CPackConfig.cmake -C Release
+      - name: Upload packages
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: packages-${{ matrix.artifact }}
+          path: |
+            reVoice-*.dmg
+            reVoice-*.zip
+            reVoice-*.tar.gz
+          if-no-files-found: error
+          retention-days: 14
+      - name: Upload test diagnostics
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: diagnostics-${{ matrix.artifact }}
+          path: build/release/Testing/Temporary/LastTest.log
+          if-no-files-found: ignore
+
+  sanitizers:
+    name: Address, undefined behavior, and leak checks
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: cmake --preset sanitize
+      - run: cmake --build --preset sanitize --parallel 3
+      - run: ctest --preset sanitize --parallel 3
+        env:
+          ASAN_OPTIONS: detect_leaks=1:halt_on_error=1
+          UBSAN_OPTIONS: halt_on_error=1:print_stacktrace=1
+
+  release:
+    name: Publish tagged release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [desktop, sanitizers]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: packages-*
+          merge-multiple: true
+          path: dist
+      - name: Add source archive and checksums
+        shell: bash
+        run: |
+          git archive --format=tar.gz --prefix="reVoice-${GITHUB_REF_NAME}/" --output="dist/reVoice-${GITHUB_REF_NAME}-source.tar.gz" "$GITHUB_SHA"
+          cd dist
+          sha256sum reVoice-* > SHA256SUMS
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release create "$GITHUB_REF_NAME" --verify-tag --title "reVoice $GITHUB_REF_NAME" --notes-file docs/RELEASE_NOTES_0.1.md dist/*
