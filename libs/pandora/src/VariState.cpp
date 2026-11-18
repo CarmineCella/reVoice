@@ -6,20 +6,8 @@
 VariState::VariState (SoundInfo* info, double cutoff, 
 	double quality, Pandora::filterType t) 
 	: AbstractFilter (info), m_type (t) {
-	if (cutoff > 0) {
-		m_cutoff = cutoff;
-		m_f1 = 2 * sin (M_PI * m_cutoff / info->samplingRate ());
-	}
-	else {
-		m_f1 = 2 * sin (M_PI * 440 / info->samplingRate ());
-	}
-	
-	if (quality > 0) {
-		m_q1 = 1 / quality;
-	}
-	else {
-		m_q1 = 1 / .707;
-	}
+	m_cutoff = std::isfinite (cutoff) && cutoff > 0 ? cutoff : 440;
+	this->quality (std::isfinite (quality) && quality > 0 ? quality : .707);
 	reset ();
 	
 	m_sicvt = M_PI / m_info->samplingRate ();
@@ -28,8 +16,12 @@ VariState::VariState (SoundInfo* info, double cutoff,
 VariState::~VariState () {}
 
 void VariState::quality (double q) { 
-	if (q > 0) {
+	if (std::isfinite (q) && q > 0) {
 		m_q1 = 1 / q;	
+		// The Chamberlin recurrence is stable only below this Q-dependent
+		// frequency coefficient. Use the rationalized form to avoid cancellation.
+		m_maxF = .99 * 4 / (std::sqrt (m_q1 * m_q1 + 4) + m_q1);
+		cutoff (m_cutoff);
 	}
 }
 
@@ -41,7 +33,7 @@ void VariState::reset () {
 void VariState::type (Pandora::filterType t) { m_type = t; }
 
 void VariState::update (Subject* s) {
-	m_f1 = 2 * sin (M_PI * m_cutoff / m_info->samplingRate ());
+	cutoff (m_cutoff);
 	m_sicvt = M_PI / m_info->samplingRate (); 
 }
 

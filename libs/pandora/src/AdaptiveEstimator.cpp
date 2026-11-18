@@ -43,6 +43,7 @@ AdaptiveEstimator::AdaptiveEstimator (SoundInfo* info, double min,
 
 AdaptiveEstimator::~AdaptiveEstimator () {
 	//delete m_bp;
+	for (int i = 0; i < m_levels; ++i) delete m_lps[i];
 	delete [] m_lps;
 	delete m_final;
 	delete m_follow;

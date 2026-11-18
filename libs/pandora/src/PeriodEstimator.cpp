@@ -8,6 +8,10 @@ PeriodEstimator::PeriodEstimator (SoundInfo* info, double min,
 	double threshold, double smoothingRate) : AbstractPitchDetector (info), 
 	m_min (min), m_max (max), m_levels (levels), m_split (split), 
 	m_threshold (threshold), m_num (0) {
+	if (!std::isfinite (min) || !std::isfinite (max) || min <= 0 || max <= min ||
+		max >= info->samplingRate () / 2 || levels > 32) {
+		throw std::runtime_error ("invalid period detector range or filter count");
+	}
 	if (m_min > m_max) {
 		m_min = m_max;
 	}
@@ -52,9 +56,15 @@ PeriodEstimator::PeriodEstimator (SoundInfo* info, double min,
 	m_sr = m_info->samplingRate ();
 	m_counter = 0;
 	m_period = 0;
+	m_val = -1;
 }
 
 PeriodEstimator::~PeriodEstimator () {
+	for (int i = 0; i < m_num * m_levels; ++i) delete m_filters[i];
+	for (int i = 0; i < m_num; ++i) {
+		delete m_zeroes[i];
+		delete m_envFollowers[i];
+	}
 	delete [] m_filters;
 	delete [] m_zeroes;
 	delete m_final;
@@ -70,6 +80,7 @@ void PeriodEstimator::threshold (double t) {
 }
 
 void PeriodEstimator::reset () {
+	m_val = -1;
 	m_block->reset ();
 	for (int i = 0; i < m_num; i++) {
 		for (int k = 0; k < m_levels; k++) {

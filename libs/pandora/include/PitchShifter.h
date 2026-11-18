@@ -28,10 +28,13 @@ public:
 	virtual ~PitchShifter ();
 	virtual void amplitude (double a) { m_gran->grainAmplitude (a); }
 	virtual void frequency (double f) {
-		double t = f / m_old;
+		double t = f / (m_old > MIN_FREQ_LIMIT ? m_old : m_freq);
 		ratio (t); 
+		m_targetFrequency = f > 0 ? f : 0;
 	}
 	virtual void ratio (double r) { 
+		m_ratioDirty = true;
+		m_targetFrequency = 0;
 		m_ratio = r; 
 		if (m_ratio <= 0)
 			m_ratio = 1;
@@ -71,10 +74,12 @@ public:
 			}	    
 			double v = (double) m_cycles / m_curr;
 			m_gran->grainDuration (v, 0, m_attack, m_decay);
-			if ((fabs (m_curr - m_old) > fabs ((m_old * m_freqThreshold) - m_old))
+			if ((m_ratioDirty || fabs (m_curr - m_old) > fabs ((m_old * m_freqThreshold) - m_old))
 				 && m_freeze == false) {
-				m_gran->density (m_ratio * (m_curr + vib), 0);
+				const double ratio = m_targetFrequency > 0 ? m_targetFrequency / m_curr : m_ratio;
+				m_gran->density (ratio * (m_curr + vib), 0);
 				m_old = m_curr;
+				m_ratioDirty = false;
 					
 	//	    		double ramp = m_rnd->tick ();
 	//			    ramp *= (m_randVibAmp * m_vibAmp);
@@ -117,6 +122,8 @@ private:
 	RangedRandomNumberGenerator* m_rnd;
 	bool m_freeze;
 	double m_formant;
+	bool m_ratioDirty;
+	double m_targetFrequency;
 };
 
 #endif	// PITCHSHIFTER_H 

@@ -13,6 +13,7 @@ Harmonizer::Harmonizer (SoundInfo* info, SignalTable* tab,
 	m_harmonyLevel (1), m_bypass (false), m_masterKey (Pandora::C), m_scaleSize (0),
 	m_scaleType (Pandora::MAJOR1), m_curr (-1), m_old (0), m_freeze (false), 
 	m_indexCopy (-1) {
+	m_scale.reserve (24);
 //   		if (pdets.size () < MAX_VOICES)
 //     		throw std::runtime_error ("invalid pitch detectors array"); 
 
@@ -57,6 +58,7 @@ Harmonizer::Harmonizer (SoundInfo* info, SignalTable* tab,
 }
 
 Harmonizer::~Harmonizer () {
+	for (int i = 0; i < MAX_VOICES; ++i) delete m_pshifts[i];
 	delete [] m_pshifts;
 	delete m_osc;
 	delete m_rumble;

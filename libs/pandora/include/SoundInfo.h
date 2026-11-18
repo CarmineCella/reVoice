@@ -6,6 +6,7 @@
 
 #include "base/Subject.h"
 #include <stdexcept>
+#include <cmath>
 
 //! This is the default sampling rate for all the classes in the framework.
 extern const double SAMPLING_RATE;
@@ -21,15 +22,14 @@ extern const int CHANNELS;
 */
 class SoundInfo : public Subject {
 private:
-	//! Default constructor; it's private.
-	SoundInfo ();
 	//! Assignment operator.
 	SoundInfo& operator= (SoundInfo&);
 	//! Copy constructor.
 	SoundInfo (const SoundInfo&);
-	//! Class destructor.
-	virtual ~SoundInfo ();
 public:
+	//! Independent configurations allow isolated processing engines.
+	SoundInfo ();
+	virtual ~SoundInfo ();
 	//! This method returns an unique instance of this class (singleton).
 	static SoundInfo* instance ();
 	//! Returns the current sample rate.
@@ -41,7 +41,7 @@ public:
 		you must set it \e BEFORE objects are instantiated.
 	*/
 	void samplingRate (double sr) { 
-		if (sr < 0)
+		if (!std::isfinite (sr) || sr <= 0)
 			throw std::runtime_error ("invalid sampling rate");
 			
 		m_sr = sr;
@@ -56,7 +56,7 @@ public:
 		you must set it \e BEFORE objects are instantiated.
 	*/
 	void channels (int ch) { 
-		if (ch < 1)
+		if (ch < 1 || ch > 2)
 			throw std::runtime_error ("invalid number of channels");
 			
 		m_ch = ch;

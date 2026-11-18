@@ -67,7 +67,7 @@ public:
 	
 			if (m_phi >= m_l) {
 				if (m_loop) {
-					m_phi -= m_l;
+					m_phi = std::fmod (m_phi, static_cast<double> (m_l));
 				}
 				else {
 					m_m = true;
@@ -77,7 +77,7 @@ public:
 			} 			
 			else if (m_phi < 0.f) {
 				if (m_loop)
-					m_phi += m_l;
+					m_phi = std::fmod (m_phi, static_cast<double> (m_l)) + m_l;
 				else {
 					m_m = true;
 					m_val = 0;
@@ -112,7 +112,7 @@ public:
 	
 			if (m_phi >= m_l) {
 				if (m_loop) {
-					m_phi -= m_l;
+					m_phi = std::fmod (m_phi, static_cast<double> (m_l));
 				}
 				else {
 					m_m = true;

@@ -3,7 +3,8 @@
 
 #include "../include/SoundFrame.h"
 
-SoundFrame::SoundFrame (const SoundFrame& right) {
+SoundFrame::SoundFrame (const SoundFrame& right)
+	: m_stereo (right.m_stereo), m_max (right.m_max) {
 	m_buffer[0] = right.get (Pandora::LEFT);
 	m_buffer[1] = right.get (Pandora::RIGHT);
 }    

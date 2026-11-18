@@ -36,7 +36,9 @@ public:
   	virtual void smoothingQuality (double f);
   	virtual void split (double s);
 	double& process (double& sig) {
-		m_data[m_index] = (float) sig; //hamming (sig, m_index, m_size);
+		// Window before the FFT: leakage from a fractional-bin fundamental must
+		// not be mistaken for a lower-frequency partial.
+		m_data[m_index] = sig * (0.5 - 0.5 * std::cos (TWOPI * m_index / m_size));
 		++m_index;
 
 		if (m_index == m_size) {
@@ -44,11 +46,12 @@ public:
 			fourier::realfft (m_data - 1, m_size, 1);
 			fourier::rectToPolar (m_data, m_size / 2);
 
-			m_peak = findSpectralPeak () / m_split;
+			const double peak = findSpectralPeak ();
+			m_peak = peak * 4.0 / m_size; // amplitude scale for a Hann window
 			//std::cout << "peak: " << m_peak << std::endl;
 
 			if (m_peak >= m_threshold) {
-				int fundPos = findFundamentalPos (m_peak); // / m_split);
+				int fundPos = findFundamentalPos (peak / m_split);
 				for (int k = 0; k < m_levels; k++) {
 					m_filters[k]->cutoff (m_bin * fundPos); // * 1.4142);
 				}
@@ -65,7 +68,7 @@ public:
 			m_val = m_final->fastProcess (t);
 		}
 		else {
-			m_val = -1;
+			if (m_peak < m_threshold) m_val = -1;
 		}
 
 		return m_val;
@@ -112,7 +115,9 @@ private:
 		int pos = m_minPos;
 		for (int l = m_minPos; l < m_maxPos; l += 2) {
 			double v = std::sqrt (m_data[l] * m_data[l]);
-			if (v >= peak) {
+			const double previous = l >= 2 ? m_data[l - 2] : 0;
+			const double next = l + 2 < m_size ? m_data[l + 2] : 0;
+			if (v >= peak && v >= previous && v >= next) {
 				pos = l;
 				break;
 			}

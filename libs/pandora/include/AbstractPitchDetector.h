@@ -22,8 +22,8 @@ private:
 	AbstractPitchDetector (const AbstractPitchDetector&);
 protected:
 	AbstractPitchDetector (SoundInfo* info) : SoundEffect (info) {}
-	virtual ~AbstractPitchDetector () {}
 public:
+	virtual ~AbstractPitchDetector () {}
     virtual void threshold (double t) = 0;
 	virtual void reset () = 0;
 	virtual double get () const = 0;

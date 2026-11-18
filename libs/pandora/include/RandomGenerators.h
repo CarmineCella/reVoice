@@ -36,7 +36,7 @@ public:
 		return m_seed;
 	}
 	long fastGenerate () {
-		return rand ();
+		return generate ();
 	}	
 private:
 	int m_a;

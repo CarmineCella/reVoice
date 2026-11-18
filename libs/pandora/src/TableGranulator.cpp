@@ -44,6 +44,7 @@ TableGranulator::TableGranulator (SoundInfo* info, SignalTable* table, double st
 }
 
 TableGranulator::~TableGranulator () {
+	for (int i = 0; i < m_maxStreams; ++i) delete m_granulators[i];
 	delete [] m_granulators;
 	delete m_pulse;
 	delete m_r1;

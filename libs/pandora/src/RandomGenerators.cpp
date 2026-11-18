@@ -5,12 +5,11 @@
 
 PRNG_31bit::PRNG_31bit () : m_a (16807), m_m (2147483647L) {	    
 	seed (time (NULL));
-	srand (time (NULL));
 }
 
 void PRNG_31bit::seed (long s) {
-	m_seed = s ? (s & m_m) : 1;
-	srand (s);
+	m_seed = s & m_m;
+	if (m_seed == 0) m_seed = 1;
 }
 
 UnitRandomNumberGenerator::UnitRandomNumberGenerator (SoundInfo* info) :

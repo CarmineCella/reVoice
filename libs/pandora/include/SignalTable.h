@@ -57,7 +57,7 @@ public:
 		requests will be delivered to the array.
 	*/
 	double& operator[] (long x) const {
-		return m_t[x % m_l];
+		return m_t[(x % m_l + m_l) % m_l];
 	}
 	//! Fills the table with harominc sines, which frequency ratio is n.
 	/*!
@@ -71,7 +71,7 @@ public:
 	void load (double* array, long len);
 	//! Sets the indivual element of the table.
 	void set (long n, double val) {
-		m_t[n % m_l] = val; 
+		m_t[(n % m_l + m_l) % m_l] = val;
 	}
     //! Sets the individual element of the table at automatic position.
     /*!

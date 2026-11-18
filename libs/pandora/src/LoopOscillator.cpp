@@ -5,7 +5,7 @@
 
 LoopOscillator::LoopOscillator (SoundInfo* info, SignalTable *tab, double amp, 
 	double freq, double phi) :
-	AbstractOscillator (info), m_loop (true) {
+	AbstractOscillator (info), m_freq (freq), m_loop (true) {
 	table (tab);
 	amplitude (amp);
 	frequency (freq);

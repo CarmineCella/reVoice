@@ -48,6 +48,8 @@ public:
 	//! Almost every possible operation with the SoundFrame has an overloaded operator.	
 	SoundFrame& operator= (const SoundFrame& r) {
 		if (this != &r) {
+			m_stereo = r.m_stereo;
+			m_max = r.m_max;
 			m_buffer[0] = r.get (Pandora::LEFT);
 			m_buffer[1] = r.get (Pandora::RIGHT); 
 		}
@@ -76,8 +78,8 @@ public:
 	//! Operator / is not checked for zero!	
 	const SoundFrame operator/ (const SoundFrame& right) {
 		SoundFrame f (true);
-		f.set (Pandora::LEFT, m_buffer[0] * right.get (Pandora::LEFT));
-		f.set (Pandora::RIGHT, m_buffer[1] * right.get (Pandora::RIGHT));
+		f.set (Pandora::LEFT, m_buffer[0] / right.get (Pandora::LEFT));
+		f.set (Pandora::RIGHT, m_buffer[1] / right.get (Pandora::RIGHT));
 		return f; 
 	}
 	

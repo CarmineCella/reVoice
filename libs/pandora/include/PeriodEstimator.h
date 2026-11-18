@@ -60,7 +60,6 @@ public:
 		}
 		else {
 			double maxSplit = max / m_split;
-			m_val = -1;
 			while (filt < m_num) {
 				if (m_followed[filt] >= maxSplit) {
 					if (m_periods[filt] <= m_bins[filt] && m_periods[filt] >= m_min) {
@@ -72,9 +71,8 @@ public:
 							m_val = m_final->process (m_periods[filt]);
 						break;
 					}
-					else {
-					   break;
-					}
+					// A low-frequency band may have energy but no valid crossing.
+					// Continue looking in higher bands instead of rejecting the tone.
 				}
 				filt++;
 			}

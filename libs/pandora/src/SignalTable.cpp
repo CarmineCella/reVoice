@@ -51,7 +51,7 @@ void SignalTable::load (double* array, long len) {
 }
 
 void SignalTable::delay (double d) {
-	m_del = d;
+	m_del = std::isfinite (d) ? std::fmax (0.0, std::fmin (d, 1.0)) : 0.0;
 	double delSamples = m_del * (double) (m_l);
 	m_ptr = (long) delSamples % m_l;
 }
@@ -61,8 +61,12 @@ double SignalTable::delay () const { return m_del; }
 void SignalTable::drawSegment (long x0, double y0, long x1, double y1, double alpha) {
 	long cnt = (x1 - x0);
 	
-	if ((cnt + x0) >= m_l)
+	if (x0 < 0 || x1 < x0 || x1 >= m_l)
 		throw std::runtime_error ("invalid table position");
+	if (cnt == 0) {
+		m_t[x0] += y1;
+		return;
+	}
 	
 	double val = y0;
 	double nxtval = y1;
@@ -94,7 +98,7 @@ void SignalTable::adsr (double attack, double decay, double alpha) {
 }
 
 void SignalTable::rectangle (double peak) {
-	drawSegment (0, peak, m_l - 1, peak, 0);
+	for (long i = 0; i < m_l; ++i) m_t[i] += peak;
 }
 
 void SignalTable::bartlett (double peak) {
@@ -107,12 +111,10 @@ void SignalTable::bartlett (double peak) {
 }
 
 void SignalTable::gauss (double peak) {
-	double arg = 12.0 / m_l;
-	int index = 0;
-	for (double i = -6.0; i < 0.0; i += arg)
-		m_t[index++] += (double)(peak * (pow (2.71828, - (i * i) / 2.0)));
-	for (double i = arg; i < 6.0; i += arg)
-		m_t[index++] += (double)(peak * (pow (2.71828, - (i * i) / 2.0)));
+	for (long i = 0; i < m_l; ++i) {
+		const double x = -6.0 + 12.0 * static_cast<double> (i) / m_l;
+		m_t[i] += peak * std::exp (-0.5 * x * x);
+	}
 }
 
 void SignalTable::hamming (double peak) {
@@ -154,11 +156,11 @@ void SignalTable::blackmanHarris (double peak) {
 
 void SignalTable::makeWindows (double peak, double* cf) {
 	double arg = TWOPI / m_l;
-	long index = 0;
-
-	for (double i = 0.0; i < TWOPI; i += arg)
-		m_t[index++] += (double)(peak * (cf[0] - cf[1] * cos (i) + cf[2] * 
-			cos (2.0 * i) - cf[3] * cos (3.0 * i)));
+	for (long index = 0; index < m_l; ++index) {
+		const double phase = index * arg;
+		m_t[index] += peak * (cf[0] - cf[1] * cos (phase) + cf[2] *
+			cos (2.0 * phase) - cf[3] * cos (3.0 * phase));
+	}
 }
 
 // EOF

@@ -26,15 +26,15 @@ public:
         double quality = .707, Pandora::filterType t = Pandora::LOWPASS);
 	virtual ~VariState ();
 	void cutoff (double c) {
-		if (c > 0) {
-			m_cutoff = c;
-			m_f1 = 2 * sin (M_PI * m_cutoff / m_info->samplingRate ());
+		if (std::isfinite (c) && c > 0) {
+			m_cutoff = std::fmin (c, m_info->samplingRate () * .49);
+			m_f1 = std::fmin (2 * sin (M_PI * m_cutoff / m_info->samplingRate ()), m_maxF);
 		}
 	}
 	//! Fast cutoff calculation; does not check c and uses approximation.
 	void fastCutoff (double c) {
 		m_cutoff = c;
-		m_f1 = 2 * (m_cutoff * m_sicvt);
+		m_f1 = std::fmin (2 * (m_cutoff * m_sicvt), m_maxF);
 	}
 	virtual void quality (double q);
     void reset ();
@@ -70,6 +70,7 @@ private:
 	double m_data[4];
 	double m_q1;
 	double m_f1;
+	double m_maxF;
 	double m_sicvt;
 };
 

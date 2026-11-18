@@ -9,7 +9,7 @@ PitchShifter::PitchShifter (SoundInfo* info, SignalTable* tab,
 	m_old (0), m_freq (440), m_cycles (2), m_freqThreshold (1), m_attack (.5),
 	m_decay (.5), m_auto (true), m_hp (false), m_vibAmp (0),
 	m_vibFreq (4.5), m_randVibAmp (0), m_randVibFreq (0), m_freeze (false),
-	m_formant (1) {
+	m_formant (1), m_ratioDirty (true), m_targetFrequency (0) {
 	assert (tab);
 	m_fn = tab->naturalFreq (info->samplingRate ());
 	
@@ -82,7 +82,8 @@ void PitchShifter::grainEnvelope (Pandora::windowType w) {
 
 void PitchShifter::cyclesPerGrain (int cpg) {
 	if (m_auto == false) { 
-		m_gran->cyclesPerGrain (cpg);
+		m_cycles = cpg > 0 ? cpg : 1;
+		m_gran->cyclesPerGrain (m_cycles);
 	}		
 }
 
