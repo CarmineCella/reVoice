@@ -1,0 +1,5 @@
+file(GLOB pandora_sources CONFIGURE_DEPENDS src/*.cpp)
+add_library(pandora STATIC ${pandora_sources})
+add_library(Pandora::Pandora ALIAS pandora)
+target_include_directories(pandora PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_link_libraries(pandora PRIVATE revoice_options)

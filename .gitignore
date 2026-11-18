@@ -7,4 +7,8 @@ Thumbs.db
 /CMakeUserPresets.json
 *.user
 *.dSYM/
+/reVoice-*.dmg
+/reVoice-*.zip
+/reVoice-*.tar.gz
+/_CPack_Packages/
 
