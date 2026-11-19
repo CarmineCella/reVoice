@@ -25,10 +25,17 @@ int main(int argc,char** argv) {
     const bool smoke=argc==2 && std::string(argv[1])=="--smoke-test";
     if(argc==2 && std::string(argv[1])=="--version") {std::cout<<"reVoice " REVOICE_VERSION "\n";return 0;}
     try {
-        Fl::scheme("gtk+");Fl::visual(FL_RGB);Fl::lock();
+        studio::applyTheme();Fl::visual(FL_RGB);Fl::lock();
         MainWindow window(!smoke);window.show();
-        if(smoke) Fl::add_timeout(.4,[](void* data){static_cast<MainWindow*>(data)->hide();},&window);
-        return Fl::run();
+        struct Smoke { MainWindow* window; int result = 0; } check{&window};
+        if(smoke) Fl::add_timeout(.3,[](void* data){
+            auto& check = *static_cast<Smoke*>(data);
+            try { check.window->validateUI(); std::cout << "Studio UI smoke test passed\n"; }
+            catch(const std::exception& error) { std::cerr << error.what() << '\n'; check.result = 1; }
+            check.window->hide();
+        },&check);
+        const int result = Fl::run();
+        return smoke ? check.result : result;
     }catch(const std::exception& error) {
         std::cerr<<"reVoice: "<<error.what()<<'\n';
         if(!smoke) fl_alert("%s",error.what());return 1;

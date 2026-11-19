@@ -1,4 +1,4 @@
-add_executable(reVoice WIN32 MACOSX_BUNDLE main.cpp MainWindow.cpp)
+add_executable(reVoice WIN32 MACOSX_BUNDLE main.cpp MainWindow.cpp StudioWidgets.cpp)
 target_compile_definitions(reVoice PRIVATE REVOICE_VERSION="${PROJECT_VERSION}")
 target_link_libraries(reVoice PRIVATE revoice_devices fltk::fltk revoice_options)
 if(APPLE)

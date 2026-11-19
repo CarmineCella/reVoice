@@ -48,10 +48,15 @@ Run `build/release/app/reVoice.app` on macOS,
 is stereo. Use headphones for live input. The initial release uses CoreAudio on
 macOS, WASAPI/DirectSound/MME on Windows, and ALSA on Linux. ASIO is not bundled.
 
-**Source & Mix** selects live input, test tones or a WAV file and controls the
-dry, harmony, morphizer and reverb levels. **Harmony** sets chord/scale behavior;
-**Voices** exposes each voice's interval, level, pan, vibrato, formants and filter.
-**Morphizer** controls the separate granular effect. **Pitch Detector** offers
+The **Studio** home page has four voice cards, pitch history and a shared mix
+strip. Select a harmony preset and input source in the header. Choose **Custom
+chord** to edit intervals, or **Advanced edit** on a voice for vibrato, formants
+and filtering. **Voices > Harmony** sets chord/scale behavior. **Input settings**
+selects live input, test tones or a WAV file and exposes the full source and mix
+controls. Drag dials vertically; hold Shift for fine adjustment. Double-click a
+dial or fader value to type a number.
+
+**Morphizer** controls the separate granular effect. **Pitch detector** offers
 Period and Spectral; AdaptiveTuner is omitted. A structural change such as detector
 size, grain envelope or device selection restarts the stream. Stop recording
 before making those changes. Other controls update while audio runs.
@@ -62,8 +67,9 @@ MIDI supports a held fundamental note or up to four chord notes, note-off,
 velocity, channel selection, all-notes-off and optional MIDI thru. New presets
 use `.rvpreset`; historical FOX settings are not imported automatically.
 
-`reVoice --smoke-test` briefly opens and closes the interface without starting
-audio or saving preferences. `reVoice --audio-smoke-test` checks the default output
+`reVoice --smoke-test` opens the interface and checks page navigation, parameter
+coverage, mirrored controls and interval mapping without starting audio or saving
+preferences. `reVoice --audio-smoke-test` checks the default output
 using a muted test tone; it does not use the microphone. Physical MIDI hardware
 and microphone quality still require manual validation.
 
