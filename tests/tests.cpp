@@ -222,6 +222,26 @@ void harmonylive() {
         near(processor.pitch(),0,0,"harmonizer pitch display clears when live input stops");
     }
 }
+void instances() {
+    Parameters p;p.set(Param::Source,1);p.set(Param::SourceLevel,1);p.set(Param::HarmonyLevel,0);
+    p.set(Param::AntiRumble,0);p.set(Param::ReverbMix,1);
+    std::vector<float> warm(24000),expected(24000),actual(24000),other(24000);
+    {
+        Processor baseline(48000,p);baseline.process(nullptr,warm.data(),12000);
+        p.set(Param::ReverbTime,4);baseline.apply(p);baseline.process(nullptr,expected.data(),12000);
+    }
+    p.set(Param::ReverbTime,2.5);
+    Processor first(48000,p);first.process(nullptr,warm.data(),12000);
+    Processor second(44100,p);second.process(nullptr,other.data(),12000);
+    p.set(Param::ReverbTime,4);first.apply(p);first.process(nullptr,actual.data(),12000);
+    for(std::size_t i=0;i<actual.size();++i) near(actual[i],expected[i],1e-7,"another sample-rate instance must not change reverb decay");
+
+    Parameters dry;dry.set(Param::SourceLevel,1);dry.set(Param::HarmonyLevel,0);dry.set(Param::ReverbMix,0);dry.set(Param::AntiRumble,0);
+    Processor impulse(48000,dry);std::array<float,2048> input{};std::array<float,4096> output{};input[0]=.5f;
+    impulse.process(input.data(),output.data(),input.size());
+    std::size_t onset=0;while(onset<input.size() && output[onset*2]==0) ++onset;
+    require(onset==impulse.latencySamples(),"reported latency matches actual dry impulse onset");
+}
 struct TempFile {
     std::filesystem::path path=std::filesystem::temp_directory_path()/
         ("revoice-test-"+std::to_string(std::chrono::steady_clock::now().time_since_epoch().count())+".wav");
@@ -283,7 +303,7 @@ int main(int argc,char** argv) {
     try {
         const std::string suite=argc>1?argv[1]:"";
         if(suite=="windows") windows();else if(suite=="frames") frames();else if(suite=="filters") filters();else if(suite=="detectors") detectors();else if(suite=="yin") yin();
-        else if(suite=="processing") processing();else if(suite=="pitchshift") pitchshift();else if(suite=="harmonylive") harmonylive();else if(suite=="wav") wav();else if(suite=="queue") queue();
+        else if(suite=="processing") processing();else if(suite=="pitchshift") pitchshift();else if(suite=="harmonylive") harmonylive();else if(suite=="instances") instances();else if(suite=="wav") wav();else if(suite=="queue") queue();
         else if(suite=="realtime") realtime();else if(suite=="recording") recording();else throw std::runtime_error("Unknown test suite");
         std::cout<<suite<<" passed\n";return 0;
     }catch(const std::exception& error){trackAllocations=false;std::cerr<<error.what()<<'\n';return 1;}
