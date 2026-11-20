@@ -7,11 +7,12 @@
 #include <vector>
 
 namespace revoice {
-struct Device {int id=-1;std::string name;};
+struct Device {int id=-1;std::string name;int channels=0;};
 struct AudioSettings {
     int input=-1,output=-1,midiInput=-1,midiOutput=-1;
     double sampleRate=48000;
     unsigned frames=256;
+    unsigned inputChannel=0;
     bool midiThru=false;
 };
 struct EngineStats {

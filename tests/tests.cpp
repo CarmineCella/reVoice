@@ -1,4 +1,5 @@
 #include "revoice/Processor.h"
+#include "revoice/YinDetector.h"
 #include "revoice/SpscQueue.h"
 #include "revoice/Recorder.h"
 #include "SignalTable.h"
@@ -80,6 +81,39 @@ void detectors() {
         near(detector->get(),220,5,"220 Hz pitch detection at "+std::to_string(rate)+" detector "+std::to_string(kind));
     }
 }
+void yin() {
+    for(double rate:{8000.,44100.,48000.,96000.,192000.}) for(double hz:{55.,82.41,110.,220.,440.,880.,1396.}) {
+        YinDetector detector(rate,40,1400,.003);
+        std::uint32_t seed=7;
+        for(int i=0;i<int(rate*.18);++i) {
+            seed=1664525u*seed+1013904223u;
+            const double t=i/rate,phase=TWOPI*hz*t;
+            const double noise=(double(seed)/4294967296.-.5)*.004;
+            detector.process(.13+(.8+.2*std::sin(TWOPI*3*t))*(.07*std::sin(phase)+.1*std::sin(2*phase)+.06*std::sin(3*phase))+noise);
+        }
+        near(detector.frequency(),hz,std::max(1.0,hz*.012),"YIN harmonic-rich voice at "+std::to_string(rate)+" Hz");
+        require(detector.confidence()>.8,"voiced YIN estimate is periodic");
+    }
+    YinDetector detector(48000,40,1400,.003);
+    auto tone=[&](double hz,double amplitude) {
+        for(int i=0;i<7200;++i) detector.process(amplitude*std::sin(TWOPI*hz*i/48000));
+    };
+    tone(110,.02); near(detector.frequency(),110,1,"quiet microphone pitch");
+    tone(330,.02); near(detector.frequency(),330,2,"YIN follows changed input pitch");
+    for(int i=0;i<7200;++i) detector.process(0);
+    near(detector.frequency(),0,0,"silence clears pitch instead of displaying a stale note");
+    for(int i=0;i<7200;++i) detector.process(.2);
+    near(detector.frequency(),0,0,"DC offset is unvoiced");
+    tone(220,.0001); near(detector.frequency(),0,0,"RMS gate rejects very quiet input");
+    detector.gate(.00001); tone(220,.0001); near(detector.frequency(),220,1,"lowering the gate admits a quiet microphone");
+    std::uint32_t seed=7;
+    for(int i=0;i<12000;++i) {seed=1664525u*seed+1013904223u;detector.process((double(seed)/4294967296.-.5)*.2);}
+    near(detector.frequency(),0,0,"unvoiced noise has no pitch");
+    detector.reset(); near(detector.frequency(),0,0,"reset clears YIN history");
+    for(int i=0;i<7200;++i) detector.process(i%2?std::numeric_limits<double>::infinity():std::numeric_limits<double>::quiet_NaN());
+    near(detector.frequency(),0,0,"non-finite input is contained");
+    rejects([]{YinDetector invalid(48000,0,1400);},"invalid YIN range rejected");
+}
 void processing() {
     Parameters parameters; parameters.set(Param::Source,1);
     std::array<float,514> block{};
@@ -139,6 +173,55 @@ void pitchshift() {
     processor.midi(0x80,72,0);
     near(dominantFrequency(processor,250,450),330,3,"MIDI release restores relative harmonization");
 }
+void harmonylive() {
+    for(double rate:{44100.,48000.}) for(int voice=0;voice<4;++voice) {
+        Parameters p; p.set(Param::SourceLevel,0); p.set(Param::ReverbMix,0); p.set(Param::Logic,0);
+        for(int v=0;v<4;++v) p.set(voiceParam(v,VoiceParam::Enabled),v==voice);
+        const int intervals[]={4,7,12,-12}; const int interval=intervals[voice];
+        p.set(voiceParam(voice,VoiceParam::Semitones),interval);
+        p.set(voiceParam(voice,VoiceParam::Highpass),0);
+        Processor processor(rate,p);
+        constexpr int count=8192;
+        std::vector<float> audio; audio.reserve(std::size_t(rate));
+        std::array<float,514> input{},output{};
+        std::size_t position=0;
+        std::uint32_t seed=7;
+        while(position<std::size_t(rate)) {
+            const std::size_t frames=std::min<std::size_t>(voice==0?64:257,std::size_t(rate)-position);
+            // Channel 1 is silent; the microphone is on channel 2. This also
+            // exercises deinterleaving used by multi-input audio interfaces.
+            for(std::size_t i=0;i<frames;++i) {
+                const double phase=TWOPI*220*(position+i)/rate;
+                seed=1664525u*seed+1013904223u;
+                const double sample=voice==1?.012*std::sin(phase)+.02*std::sin(2*phase)+.015*std::sin(3*phase)+.001*(double(seed)/4294967296.-.5):.02*std::sin(phase);
+                input[2*i]=0;input[2*i+1]=float(sample);
+            }
+            processor.process(input.data()+1,output.data(),frames,2);
+            for(std::size_t i=0;i<frames;++i) audio.push_back(output[2*i]+output[2*i+1]);
+            position+=frames;
+        }
+        near(processor.pitch(),220,2,"quiet live input informs harmony voice "+std::to_string(voice+1));
+        auto power=[&](double hz) {
+            double real=0,imag=0;
+            for(int i=0;i<count;++i) {
+                const double value=audio[audio.size()-count+i]*(.5-.5*std::cos(TWOPI*i/count));
+                real+=value*std::cos(TWOPI*hz*i/rate);imag+=value*std::sin(TWOPI*hz*i/rate);
+            }
+            return real*real+imag*imag;
+        };
+        const double expected=220*std::pow(2.0,interval/12.0);
+        const double targetPower=power(expected),sourcePower=power(220);
+        const auto context=" voice "+std::to_string(voice+1)+" at "+std::to_string(rate)+" Hz; target "+std::to_string(targetPower)+", original "+std::to_string(sourcePower);
+        require(targetPower>.05,"isolated harmony voice has audible energy at its requested interval"+context);
+        if(interval>0) require(targetPower>4*sourcePower,"harmony contains the shifted voice with the original muted"+context);
+        // A formant-preserving octave down retains the original frequency as
+        // its second harmonic; test the new fundamental against nearby bins.
+        else require(targetPower>20*std::max(power(expected-30),power(expected+30)),"octave-down fundamental is resolved"+context);
+        std::fill(input.begin(),input.end(),0);
+        for(int block=0;block<60;++block) processor.process(input.data()+1,output.data(),257,2);
+        near(processor.pitch(),0,0,"harmonizer pitch display clears when live input stops");
+    }
+}
 struct TempFile {
     std::filesystem::path path=std::filesystem::temp_directory_path()/
         ("revoice-test-"+std::to_string(std::chrono::steady_clock::now().time_since_epoch().count())+".wav");
@@ -187,7 +270,7 @@ void realtime() {
     Parameters p;p.set(Param::Source,1);Processor processor(48000,p);
     std::array<float,256> block{};
     processor.process(nullptr,block.data(),128);
-    p.set(Param::OutputGain,.7);p.set(Param::Logic,7);p.set(Param::Scale,4);p.set(Param::MidiMode,2);
+    p.set(Param::OutputGain,.7);p.set(Param::Logic,7);p.set(Param::Scale,4);p.set(Param::MidiMode,2);p.set(Param::YinGate,.001);
     allocationCount=0;trackAllocations=true;
     processor.apply(p);processor.midi(0x90,60,100);
     for(int i=0;i<400;++i) processor.process(nullptr,block.data(),128);
@@ -199,8 +282,8 @@ void realtime() {
 int main(int argc,char** argv) {
     try {
         const std::string suite=argc>1?argv[1]:"";
-        if(suite=="windows") windows();else if(suite=="frames") frames();else if(suite=="filters") filters();else if(suite=="detectors") detectors();
-        else if(suite=="processing") processing();else if(suite=="pitchshift") pitchshift();else if(suite=="wav") wav();else if(suite=="queue") queue();
+        if(suite=="windows") windows();else if(suite=="frames") frames();else if(suite=="filters") filters();else if(suite=="detectors") detectors();else if(suite=="yin") yin();
+        else if(suite=="processing") processing();else if(suite=="pitchshift") pitchshift();else if(suite=="harmonylive") harmonylive();else if(suite=="wav") wav();else if(suite=="queue") queue();
         else if(suite=="realtime") realtime();else if(suite=="recording") recording();else throw std::runtime_error("Unknown test suite");
         std::cout<<suite<<" passed\n";return 0;
     }catch(const std::exception& error){trackAllocations=false;std::cerr<<error.what()<<'\n';return 1;}

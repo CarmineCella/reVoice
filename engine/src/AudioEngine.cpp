@@ -43,6 +43,7 @@ struct AudioEngine::Impl {
     std::atomic<double> pitch{0};
     std::atomic<std::uint64_t> xruns{0},droppedMidi{0};
     double latency=0;
+    unsigned inputChannels=1;
     Impl() {
         checkAudio(Pa_Initialize(),"Cannot initialize audio");
         midiAvailable=Pm_Initialize()>=0;
@@ -65,7 +66,8 @@ struct AudioEngine::Impl {
             Midi message;
             for(int n=0;n<128 && s.midi.pop(message);++n)
                 s.processor->midi(message.status,message.note,message.velocity);
-            s.processor->process(static_cast<const float*>(in),output,frames);
+            const auto* selected=in?static_cast<const float*>(in)+s.settings.inputChannel:nullptr;
+            s.processor->process(selected,output,frames,s.inputChannels);
             s.input.store(s.processor->inputPeak(),std::memory_order_relaxed);
             s.left.store(s.processor->leftPeak(),std::memory_order_relaxed);
             s.right.store(s.processor->rightPeak(),std::memory_order_relaxed);
@@ -79,10 +81,11 @@ struct AudioEngine::Impl {
 AudioEngine::AudioEngine():impl_(std::make_unique<Impl>()){}
 AudioEngine::~AudioEngine(){stop();}
 std::vector<Device> AudioEngine::inputs()const {
-    std::vector<Device> devices{{-1,"System default"}};
+    const auto* system=Pa_GetDeviceInfo(Pa_GetDefaultInputDevice());
+    std::vector<Device> devices{{-1,"System default",system?system->maxInputChannels:0}};
     const int count=Pa_GetDeviceCount();
     for(int i=0;i<count;++i) {const auto* d=Pa_GetDeviceInfo(i);if(d && d->maxInputChannels>0)
-        devices.push_back({i,std::string(d->name)+" ("+Pa_GetHostApiInfo(d->hostApi)->name+")"});}
+        devices.push_back({i,std::string(d->name)+" ("+Pa_GetHostApiInfo(d->hostApi)->name+")",d->maxInputChannels});}
     return devices;
 }
 std::vector<Device> AudioEngine::outputs()const {
@@ -108,6 +111,7 @@ void AudioEngine::start(const AudioSettings& settings,const Parameters& requeste
     if(settings.frames<32 || settings.frames>4096) throw std::runtime_error("Audio buffer must contain 32 to 4096 frames");
     s.processor=std::make_unique<Processor>(settings.sampleRate,parameters,source);
     s.controlParameters=parameters;s.changes.reset();s.midi.reset();s.xruns=0;s.callbackError=false;s.droppedMidi=0;s.panicRequested=false;
+    s.inputChannels=1;
     try {
         const int out=settings.output<0?Pa_GetDefaultOutputDevice():settings.output;
         const auto* output=Pa_GetDeviceInfo(out);
@@ -119,7 +123,9 @@ void AudioEngine::start(const AudioSettings& settings,const Parameters& requeste
             const int in=settings.input<0?Pa_GetDefaultInputDevice():settings.input;
             const auto* input=Pa_GetDeviceInfo(in);
             if(!input || input->maxInputChannels<1) throw std::runtime_error("No input device is available; select an input or choose a test tone / WAV source");
-            inputParameters={in,1,paFloat32,input->defaultLowInputLatency,nullptr};
+            if(settings.inputChannel>=unsigned(input->maxInputChannels)) throw std::runtime_error("Selected input channel is unavailable on this device");
+            s.inputChannels=settings.inputChannel+1;
+            inputParameters={in,int(s.inputChannels),paFloat32,input->defaultLowInputLatency,nullptr};
         }
         checkAudio(Pa_IsFormatSupported(live?&inputParameters:nullptr,&outputParameters,settings.sampleRate),"Unsupported device or sample-rate combination");
         checkAudio(Pa_OpenStream(&s.stream,live?&inputParameters:nullptr,&outputParameters,settings.sampleRate,

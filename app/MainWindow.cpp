@@ -127,12 +127,15 @@ MainWindow::MainWindow(bool persistence)
     pages_ = new studio::PageStack();
     makeStudio(); makeVoices();
     makeParameterPage("Morphizer", "Asynchronous grains, pitch movement, and texture.", {"Morphizer"});
-    makeParameterPage("Pitch detector", "Tune the detector to your voice. Structural changes restart audio.", {"Detector"});
+    makeParameterPage("Pitch detector", "YIN drives all four harmony voices. Lower the YIN input gate for quiet microphones.", {"Detector"});
     makeDevices();
     makeParameterPage("Source & mix", "Set your input, source playback, and master mix.", {"Source", "Mix"});
     pages_->end(); body->end();
     auto* footer = row(); footer->box(FL_FLAT_BOX); footer->color(studio::Sidebar); footer->margin(22, 0, 22, 0);
     status_ = text("Stopped  |  Choose a source and start audio", 12, false, studio::Muted);
+    auto* devices = new studio::Button("Audio devices", studio::Icon::Audio); footer->fixed(devices, 146);
+    devices->tooltip("Input/output devices and microphone channel (Cmd/Ctrl+,)");
+    devices->callback([](Fl_Widget*, void* p) { static_cast<MainWindow*>(p)->showPage(4); }, this);
     footer->end(); shell->fixed(footer, 38); shell->end();
     end(); resizable(shell); size_range(1180, 760);
     callback([](Fl_Widget*, void* p) { static_cast<MainWindow*>(p)->closeWindow(); }, this);
@@ -194,6 +197,8 @@ void MainWindow::makeHeader() {
     menu->add("Load preset...", FL_COMMAND + 'l', [](Fl_Widget*, void* p) { static_cast<MainWindow*>(p)->loadPreset(); }, this);
     menu->add("Save preset...", FL_COMMAND + 's', [](Fl_Widget*, void* p) { static_cast<MainWindow*>(p)->savePreset(); }, this, FL_MENU_DIVIDER);
     menu->add("Input settings", 0, [](Fl_Widget*, void* p) { static_cast<MainWindow*>(p)->showPage(5); }, this);
+    menu->add("Audio and MIDI devices...", FL_COMMAND + ',', [](Fl_Widget*, void* p) { static_cast<MainWindow*>(p)->showPage(4); }, this);
+    menu->add("Restore harmony and mix", 0, [](Fl_Widget*, void* p) { static_cast<MainWindow*>(p)->restoreHarmonyMix(); }, this);
     menu->add("All notes off", FL_F + 10, [](Fl_Widget*, void* p) { static_cast<MainWindow*>(p)->engine_->panic(); }, this, FL_MENU_DIVIDER);
     menu->add("About reVoice", 0, [](Fl_Widget*, void*) {
         fl_message("reVoice " REVOICE_VERSION "\nReal-time vocal harmonizer\nCarmine Emanuele Cella\n\nBSD 2-Clause application; Pandora LGPL 2.1.\nBased in part on the work of the FLTK project.\nAudio: PortAudio. MIDI: PortMidi. Reverb: STK NRev.");
@@ -320,7 +325,7 @@ void MainWindow::makeVoices() {
 void MainWindow::makeDevices() {
     auto* page = column(12); page->margin(20); page->color(studio::Background);
     page->fixed(text("Audio / MIDI", 25, true), 36);
-    page->fixed(text("Choose devices and a buffer size. Stop recording before changing devices.", 12, false, studio::Muted), 25);
+    page->fixed(text("Choose input and output devices. Start audio uses these selections; Apply updates a running stream.", 12, false, studio::Muted), 25);
     auto* panel = new studio::Panel(); panel->margin(18); panel->gap(14);
     auto deviceField = [](const char* label) {
         auto* field = column(7); field->fixed(text(label, 12, false, studio::Muted), 18);
@@ -328,7 +333,10 @@ void MainWindow::makeDevices() {
     };
     auto* first = row(20); input_ = deviceField("Audio input"); fillDevices(input_, inputs_);
     output_ = deviceField("Stereo output"); fillDevices(output_, outputs_); first->end(); panel->fixed(first, 62);
-    auto* second = row(20); rate_ = deviceField("Sample rate"); rate_->add("44100 Hz|48000 Hz|96000 Hz"); rate_->value(1);
+    auto* second = row(20); inputChannel_ = deviceField("Input channel"); refreshInputChannels();
+    inputChannel_->tooltip("Select the microphone or line channel on your interface. Channel 1 is the default.");
+    input_->callback([](Fl_Widget*, void* p) { static_cast<MainWindow*>(p)->refreshInputChannels(); }, this);
+    rate_ = deviceField("Sample rate"); rate_->add("44100 Hz|48000 Hz|96000 Hz"); rate_->value(1);
     buffer_ = deviceField("Buffer size"); buffer_->add("64 frames|128 frames|256 frames|512 frames|1024 frames"); buffer_->value(2);
     second->end(); panel->fixed(second, 62);
     auto* third = row(20); midiInput_ = deviceField("MIDI input"); fillDevices(midiInput_, midiInputs_);
@@ -341,7 +349,7 @@ void MainWindow::makeDevices() {
     auto* actions = row(); auto* apply = new studio::Button("Apply audio / MIDI settings", studio::Icon::Audio);
     apply->primary(true); actions->fixed(apply, 248); apply->callback([](Fl_Widget*, void* p) { static_cast<MainWindow*>(p)->applyDevices(); }, this);
     spacer(); actions->end(); panel->fixed(actions, 40); spacer(); panel->end();
-    page->fixed(text("Smaller buffers reduce latency. Use headphones with live microphone input.", 12, false, studio::Muted), 26); page->end();
+    page->fixed(text("Input device/channel is used with Live input. Use headphones with a live microphone.", 12, false, studio::Muted), 26); page->end();
 }
 void MainWindow::showPage(int page) {
     page_ = std::clamp(page, 0, 5); pages_->showPage(page_);
@@ -362,6 +370,17 @@ void MainWindow::syncControls() {
         widget->redraw();
     }
     morphEnabled_->value(parameters_[Param::MorphLevel] > 0); reverbEnabled_->value(parameters_[Param::ReverbMix] > 0);
+    const bool yin = parameters_[Param::Detector] == 0;
+    for (Param id : {Param::Threshold, Param::FilterQuality, Param::SmoothingRate, Param::SmoothingQuality,
+                     Param::FilterLevels, Param::DetectorSplit, Param::FftSize})
+        for (auto* control : controls_[static_cast<std::size_t>(id)]) {
+            if (yin) control->deactivate(); else control->activate();
+            control->tooltip("Used only by the legacy Spectral detector.");
+        }
+    for (auto* control : controls_[static_cast<std::size_t>(Param::YinGate)]) {
+        if (yin) control->activate(); else control->deactivate();
+        control->tooltip("Minimum RMS input level for YIN. Lower this for a quiet microphone; raise it to reject room noise.");
+    }
     morphEnabled_->redraw(); reverbEnabled_->redraw();
     if (sourceFile_) sourceFile_->copy_label(filePath_.empty() ? "No WAV selected" : std::filesystem::u8path(filePath_).filename().u8string().c_str());
 }
@@ -387,6 +406,7 @@ void MainWindow::applyParameters() {
 
 void MainWindow::startAudio() {
     try {
+        settings_=selectedDevices();
         if(parameters_[Param::Source]==3 && file_.mono.empty() && !filePath_.empty()) file_=readWav(std::filesystem::u8path(filePath_));
         engine_->start(settings_,parameters_,file_.mono.empty()?nullptr:&file_);
         sent_=parameters_;pending_=false;start_->label("Stop audio");record_->activate();
@@ -444,12 +464,37 @@ void MainWindow::savePreset() {
         if(!out) throw std::runtime_error("Cannot write preset");
     }catch(const std::exception& error){showError(error);}
 }
+AudioSettings MainWindow::selectedDevices() const {
+    AudioSettings selected;
+    static const double rates[]={44100,48000,96000};static const unsigned buffers[]={64,128,256,512,1024};
+    selected.input=deviceId(input_,inputs_);selected.output=deviceId(output_,outputs_);
+    selected.midiInput=deviceId(midiInput_,midiInputs_);selected.midiOutput=deviceId(midiOutput_,midiOutputs_);
+    selected.sampleRate=rates[std::clamp(rate_->value(),0,2)];selected.frames=buffers[std::clamp(buffer_->value(),0,4)];selected.midiThru=thru_->value()!=0;
+    selected.inputChannel=unsigned(std::max(0,inputChannel_->value()));
+    return selected;
+}
+void MainWindow::refreshInputChannels() {
+    const int index=std::clamp(input_->value(),0,int(inputs_.size())-1);
+    const int channels=std::max(1,inputs_[index].channels),previous=std::max(0,inputChannel_->value());
+    inputChannel_->clear();
+    for (int i=1;i<=channels;++i) inputChannel_->add(("Channel "+std::to_string(i)).c_str());
+    inputChannel_->value(std::min(previous,channels-1));
+}
+void MainWindow::restoreHarmonyMix() {
+    if(engine_->recording()){fl_message("Stop recording before restoring harmony settings.");return;}
+    const Parameters defaults;
+    const auto& info=parameterInfo();
+    for(std::size_t i=0;i<parameterCount;++i) {
+        const auto id=static_cast<Param>(i);
+        if(info[i].group=="Mix" || info[i].group=="Harmony" || info[i].group.compare(0,6,"Voice ")==0 ||
+            id==Param::MidiMode || id==Param::Detector || id==Param::YinGate)
+            parameters_.set(id,defaults[id]);
+    }
+    syncControls();applyParameters();
+}
 void MainWindow::applyDevices() {
     if(engine_->recording()){fl_message("Stop recording before changing devices.");return;}
-    static const double rates[]={44100,48000,96000};static const unsigned buffers[]={64,128,256,512,1024};
-    settings_.input=deviceId(input_,inputs_);settings_.output=deviceId(output_,outputs_);
-    settings_.midiInput=deviceId(midiInput_,midiInputs_);settings_.midiOutput=deviceId(midiOutput_,midiOutputs_);
-    settings_.sampleRate=rates[std::clamp(rate_->value(),0,2)];settings_.frames=buffers[std::clamp(buffer_->value(),0,4)];settings_.midiThru=thru_->value()!=0;
+    settings_=selectedDevices();
     if(engine_->running()) startAudio();else status_->copy_label("Audio / MIDI settings saved. Press Start audio when ready.");
 }
 void MainWindow::loadPreferences() {
@@ -461,6 +506,8 @@ void MainWindow::loadPreferences() {
         for(std::size_t i=0;i<devices.size();++i) if(devices[i].name==name) {widget->value(int(i));break;}
     };
     device("audio_input",input_,inputs_);device("audio_output",output_,outputs_);device("midi_input",midiInput_,midiInputs_);device("midi_output",midiOutput_,midiOutputs_);
+    refreshInputChannels(); int inputChannel; prefs.get("input_channel",inputChannel,0);
+    inputChannel_->value(std::clamp(inputChannel,0,inputChannel_->size()-2));
     int rate,buffer,thru;prefs.get("sample_rate_index",rate,1);prefs.get("buffer_index",buffer,2);prefs.get("midi_thru",thru,0);
     rate_->value(std::clamp(rate,0,2));buffer_->value(std::clamp(buffer,0,4));thru_->value(thru!=0);applyDevices();
 }
@@ -469,6 +516,7 @@ void MainWindow::savePreferences() {
     const auto& info=parameterInfo();for(std::size_t i=0;i<parameterCount;++i) prefs.set(info[i].key.c_str(),parameters_.values[i]);
     prefs.set("source_file",filePath_.c_str());
     prefs.set("audio_input",deviceName(input_,inputs_).c_str());prefs.set("audio_output",deviceName(output_,outputs_).c_str());
+    prefs.set("input_channel",inputChannel_->value());
     prefs.set("midi_input",deviceName(midiInput_,midiInputs_).c_str());prefs.set("midi_output",deviceName(midiOutput_,midiOutputs_).c_str());
     prefs.set("sample_rate_index",rate_->value());prefs.set("buffer_index",buffer_->value());prefs.set("midi_thru",thru_->value());
     prefs.flush();
@@ -480,7 +528,7 @@ void MainWindow::transportState() {
     start_->label(running ? "Stop audio" : "Start audio");
     start_->icon(running ? studio::Icon::Stop : studio::Icon::Play); start_->primary(!running);
     record_->label(recording ? "Stop rec" : "Record"); record_->value(recording); record_->redraw();
-    audioState_->copy_label(running ? "Audio on" : "Stopped");
+    audioState_->copy_label(running ? (parameters_[Param::Bypass] ? "Bypass" : "Audio on") : "Stopped");
     audioState_->labelcolor(running ? studio::Mint : studio::Muted); audioState_->redraw();
 }
 void MainWindow::timer(void* data) { static_cast<MainWindow*>(data)->tick(); Fl::repeat_timeout(.05, timer, data); }
@@ -508,6 +556,7 @@ int MainWindow::handle(int event) {
         if (Fl::event_state(FL_COMMAND)) {
             if (key == 'o') { chooseSource(); return 1; } if (key == 'l') { loadPreset(); return 1; }
             if (key == 's') { savePreset(); return 1; } if (key == 'q') { closeWindow(); return 1; }
+            if (key == ',') { showPage(4); return 1; }
         }
     }
     return Fl_Double_Window::handle(event);
@@ -538,5 +587,17 @@ void MainWindow::validateUI() {
         voiceNavigation_[voice]->do_callback();
         if (voicePage_ != voice) throw std::runtime_error("Voice callback selected the wrong page");
     }
+    input_->value(inputs_.size()>1?1:0); input_->do_callback();
+    output_->value(outputs_.size()>1?1:0);
+    inputChannel_->value(inputChannel_->size()-2); rate_->value(0); buffer_->value(3);
+    const auto selected=selectedDevices();
+    if (selected.input!=inputs_[input_->value()].id || selected.output!=outputs_[output_->value()].id ||
+        selected.inputChannel!=unsigned(inputChannel_->value()) || selected.sampleRate!=44100 || selected.frames!=512)
+        throw std::runtime_error("Selected audio devices/channel are not applied to stream settings");
+    const double source=parameters_[Param::Source];
+    parameters_.set(Param::HarmonyLevel,0); parameters_.set(Param::Bypass,1); parameters_.set(Param::MidiMode,2);
+    restoreHarmonyMix();
+    if (parameters_[Param::HarmonyLevel]!=1 || parameters_[Param::Bypass]!=0 || parameters_[Param::MidiMode]!=0 || parameters_[Param::Source]!=source)
+        throw std::runtime_error("Restore mix must enable harmony and preserve the source");
     parameters_ = original; syncControls(); showPage(0); showVoice(0);
 }

@@ -16,7 +16,8 @@ public:
     // Call on the audio thread, or while it is stopped. Structural changes
     // require a fresh Processor, constructed outside the callback.
     void apply(const Parameters& parameters);
-    void process(const float* monoInput,float* stereoOutput,std::size_t frames) noexcept;
+    // input points to the selected channel; stride supports interleaved devices.
+    void process(const float* input,float* stereoOutput,std::size_t frames,std::size_t inputStride=1) noexcept;
     void midi(unsigned char status,unsigned char note,unsigned char velocity) noexcept;
     double pitch() const noexcept;
     float inputPeak() const noexcept;

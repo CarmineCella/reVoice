@@ -1,6 +1,6 @@
 add_executable(revoice-tests tests.cpp)
 target_link_libraries(revoice-tests PRIVATE revoice_engine revoice_options Threads::Threads)
-foreach(suite IN ITEMS windows frames filters detectors processing pitchshift wav queue realtime recording)
+foreach(suite IN ITEMS windows frames filters detectors yin processing pitchshift harmonylive wav queue realtime recording)
   add_test(NAME ${suite} COMMAND revoice-tests ${suite})
   set_tests_properties(${suite} PROPERTIES TIMEOUT 120)
 endforeach()

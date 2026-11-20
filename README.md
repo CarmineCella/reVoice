@@ -8,7 +8,8 @@ PortMidi. Reverb uses STK NRev.
 
 The application is being rebuilt for release 0.1.0. The original FOX sources are
 archived in `legacy/fox`. AdaptiveTuner is unavailable and is deliberately omitted
-from the rebuilt application; Period and Spectral are the available detectors.
+from the rebuilt application. A dependency-free C++ YIN detector is the default;
+the historical Spectral detector remains an optional legacy choice.
 
 ## Build
 
@@ -44,7 +45,10 @@ build/release/revoice-render vocal.wav harmonized.wav 0
 Run `build/release/app/reVoice.app` on macOS,
 `build/release/app/Release/reVoice.exe` on Windows, or
 `build/release/app/reVoice` on Linux. Choose devices and a buffer size in
-**Audio / MIDI**, press **Apply**, then **Start audio**. Input is mono and output
+**Audio / MIDI** (or **Audio devices** in the footer). Select the microphone/line
+**Input channel** if your interface has multiple inputs, then **Start audio**.
+Start always uses the displayed device selections; **Apply** updates a running
+stream. Cmd/Ctrl+, opens this page. The selected input channel is mono and output
 is stereo. Use headphones for live input. The initial release uses CoreAudio on
 macOS, WASAPI/DirectSound/MME on Windows, and ALSA on Linux. ASIO is not bundled.
 
@@ -57,7 +61,22 @@ controls. Drag dials vertically; hold Shift for fine adjustment. Double-click a
 dial or fader value to type a number.
 
 **Morphizer** controls the separate granular effect. **Pitch detector** offers
-Period and Spectral; AdaptiveTuner is omitted. A structural change such as detector
+YIN and legacy Spectral. YIN analyzes the same input that feeds the harmonizer;
+all four pitch shifters share its estimate. It includes an adjustable **YIN input
+gate (RMS)** for quiet microphones and rejects unvoiced/noise frames. The display
+clears when pitch is lost. The implementation uses preallocated buffers, filtered
+decimation, normalized differences and interpolated minima, based on the
+[YIN paper](https://doi.org/10.1121/1.1458024), with no new library dependency.
+Existing settings select YIN by default when first opened by this build; other
+source, mix and device preferences are preserved.
+
+If the original voice masks the harmony, use the **...** menu's **Restore harmony
+and mix** command. It restores voice/mix defaults, clears bypass/freeze and MIDI
+chord gating, and selects YIN while keeping the source and device selections.
+To hear only the harmony, turn **Original** all the way down. Choose **Live input**
+in the header for the microphone; device selection does not change the source.
+
+AdaptiveTuner is omitted. A structural change such as detector
 size, grain envelope or device selection restarts the stream. Stop recording
 before making those changes. Other controls update while audio runs.
 
@@ -68,7 +87,8 @@ velocity, channel selection, all-notes-off and optional MIDI thru. New presets
 use `.rvpreset`; historical FOX settings are not imported automatically.
 
 `reVoice --smoke-test` opens the interface and checks page navigation, parameter
-coverage, mirrored controls and interval mapping without starting audio or saving
+coverage, mirrored controls, interval mapping, device/channel settings and mix
+restoration without starting audio or saving
 preferences. `reVoice --audio-smoke-test` checks the default output
 using a muted test tone; it does not use the microphone. Physical MIDI hardware
 and microphone quality still require manual validation.

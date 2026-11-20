@@ -230,7 +230,7 @@ std::string Value::formatted(double value) const {
     case Units::Semitones: std::snprintf(text, sizeof(text), "%+.0f st", value); break;
     case Units::Seconds: std::snprintf(text, sizeof(text), "%.2f s", value); break;
     default:
-        std::snprintf(text, sizeof(text), step() >= 1 ? "%.0f" : step() < .01 ? "%.3f" : "%.2f", value); break;
+        std::snprintf(text, sizeof(text), step() >= 1 ? "%.0f" : step() < .001 ? "%.4f" : step() < .01 ? "%.3f" : "%.2f", value); break;
     }
     return text;
 }

@@ -12,7 +12,7 @@ enum class Param : std::size_t {
     Bypass, Freeze, AntiRumble, Logic, Key, Scale, Transpose,
     Window, Attack, Decay, Cycles, AutoGrains, PitchChange,
     Detector, MinimumPitch, MaximumPitch, Threshold, FilterQuality,
-    SmoothingRate, SmoothingQuality, FilterLevels, DetectorSplit, Feedback, FftSize,
+    SmoothingRate, SmoothingQuality, FilterLevels, DetectorSplit, YinGate, FftSize,
     MorphDensity, MorphRandomDensity, MorphDuration, MorphRandomDuration,
     MorphFrequency, MorphRandomFrequency, MorphGliss, MorphRandomGliss,
     MorphWindow, MorphPan, MorphSpeed, MorphJitter, MorphAmplitude,

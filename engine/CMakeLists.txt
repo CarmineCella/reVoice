@@ -1,4 +1,4 @@
-add_library(revoice_engine STATIC src/Parameters.cpp src/Processor.cpp src/WavFile.cpp src/Recorder.cpp)
+add_library(revoice_engine STATIC src/Parameters.cpp src/Processor.cpp src/YinDetector.cpp src/WavFile.cpp src/Recorder.cpp)
 target_include_directories(revoice_engine PUBLIC include)
 target_link_libraries(revoice_engine PUBLIC Pandora::Pandora PRIVATE revoice_stk Threads::Threads revoice_options)
 if(REVOICE_BUILD_APP)

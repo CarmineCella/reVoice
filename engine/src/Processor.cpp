@@ -1,6 +1,6 @@
 #include "revoice/Processor.h"
+#include "revoice/YinDetector.h"
 #include "Harmonizer.h"
-#include "PeriodEstimator.h"
 #include "SpectralEstimator.h"
 #include "NRev.h"
 #include <algorithm>
@@ -9,10 +9,29 @@
 #include <stdexcept>
 
 namespace revoice {
+namespace {
+// The harmonizer advances this shared detector once per input sample. Each
+// pitch shifter reads get(), so analysis and audible harmony use the same F0.
+class YinPitchAdapter final : public AbstractPitchDetector {
+    YinDetector yin_;
+public:
+    YinPitchAdapter(SoundInfo* info,double low,double high,double gate)
+        : AbstractPitchDetector(info),yin_(info->samplingRate(),low,high,gate) { m_val=0; }
+    double& process(double& sample) override { m_val=yin_.process(sample); return m_val; }
+    double get() const override { return yin_.frequency(); }
+    double min() const override { return yin_.minimum(); }
+    double max() const override { return yin_.maximum(); }
+    void threshold(double rms) override { yin_.gate(rms); }
+    void reset() override { yin_.reset(); m_val=0; }
+    void smoothingRate(double) override {}
+    void smoothingQuality(double) override {}
+    void update(Subject*) override { reset(); } // Rate changes construct a fresh Processor.
+};
+}
 struct Processor::Impl {
     SoundInfo info;
     SignalTable table{262144};
-    std::unique_ptr<PeriodEstimator> period;
+    std::unique_ptr<YinPitchAdapter> yin;
     std::unique_ptr<SpectralEstimator> spectral;
     std::unique_ptr<Harmonizer> harmony;
     std::unique_ptr<TableGranulator> morph;
@@ -49,10 +68,10 @@ struct Processor::Impl {
         const int levels=int(parameters[Param::FilterLevels]);
         const double threshold=parameters[Param::Threshold];
         if(parameters[Param::Detector]==0)
-            period=std::make_unique<PeriodEstimator>(&info,low,high,levels,30,threshold);
+            yin=std::make_unique<YinPitchAdapter>(&info,low,high,parameters[Param::YinGate]);
         else spectral=std::make_unique<SpectralEstimator>(&info,128<<int(parameters[Param::FftSize]),
             low,high,levels,30,1.0,threshold);
-        AbstractPitchDetector* detector=period?static_cast<AbstractPitchDetector*>(period.get()):spectral.get();
+        AbstractPitchDetector* detector=yin?static_cast<AbstractPitchDetector*>(yin.get()):spectral.get();
         table.delay(sr*parameters[Param::DelayMs]/1000/table.size());
         harmony=std::make_unique<Harmonizer>(&info,&table,detector,0,1);
         morph=std::make_unique<TableGranulator>(&info,&table,0,1,64);
@@ -106,13 +125,8 @@ void Processor::apply(const Parameters& requested) {
         for(int i=0;i<4;++i) h.status(i,p[Param::MidiMode]==2?false:p[voiceParam(i,VoiceParam::Enabled)]!=0);
     }
     if(chordChanged && p[Param::MidiMode]!=0) s.restoreMidi(p);
-    if(s.period) {
-        if(changed(Param::Threshold)) s.period->threshold(p[Param::Threshold]);
-        if(changed(Param::FilterQuality)) s.period->filterQuality(p[Param::FilterQuality]);
-        if(changed(Param::SmoothingRate)) s.period->smoothingRate(p[Param::SmoothingRate]);
-        if(changed(Param::SmoothingQuality)) s.period->smoothingQuality(p[Param::SmoothingQuality]);
-        if(changed(Param::DetectorSplit)) s.period->split(p[Param::DetectorSplit]);
-        if(changed(Param::Feedback)) s.period->feedback(p[Param::Feedback]);
+    if(s.yin) {
+        if(changed(Param::YinGate)) s.yin->threshold(p[Param::YinGate]);
     } else {
         if(changed(Param::Threshold)) s.spectral->threshold(p[Param::Threshold]);
         if(changed(Param::FilterQuality)) s.spectral->filterQuality(p[Param::FilterQuality]);
@@ -139,13 +153,13 @@ void Processor::apply(const Parameters& requested) {
     if(changed(Param::ReverbTime)) { s.reverbLeft->setT60(p[Param::ReverbTime]); s.reverbRight->setT60(p[Param::ReverbTime]); }
     s.parameters=p; s.configured=true;
 }
-void Processor::process(const float* input,float* output,std::size_t frames) noexcept {
+void Processor::process(const float* input,float* output,std::size_t frames,std::size_t inputStride) noexcept {
     auto& s=*impl_; const auto& p=s.parameters;
     s.inputPeak=s.leftPeak=s.rightPeak=0;
     for(std::size_t i=0;i<frames;++i) {
         double sample=0;
         const int source=int(p[Param::Source]);
-        if(source==0) sample=input?input[i]:0;
+        if(source==0) sample=input?input[i*inputStride]:0;
         else if(source==1 || source==2) {
             sample=.35*(source==1?std::sin(TWOPI*s.phase):(s.phase<.5?1.0:-1.0));
             s.phase+=p[Param::SourceFrequency]/s.rate;
@@ -216,7 +230,7 @@ void Processor::midi(unsigned char status,unsigned char note,unsigned char veloc
         }
     }
 }
-double Processor::pitch() const noexcept { return impl_->harmony->pitch(); }
+double Processor::pitch() const noexcept { return impl_->yin?impl_->yin->get():impl_->spectral->get(); }
 float Processor::inputPeak() const noexcept { return impl_->inputPeak; }
 float Processor::leftPeak() const noexcept { return impl_->leftPeak; }
 float Processor::rightPeak() const noexcept { return impl_->rightPeak; }

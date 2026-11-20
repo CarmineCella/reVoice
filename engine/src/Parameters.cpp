@@ -37,16 +37,17 @@ const std::array<ParameterInfo, parameterCount>& parameterInfo() {
         add(Param::Cycles,"cycles","Cycles per grain","Harmony",1,8,2,1);
         add(Param::AutoGrains,"auto_grains","Automatic grain length","Harmony",0,1,1,1);
         add(Param::PitchChange,"pitch_change","Pitch change threshold (st)","Harmony",0,2,0,.01);
-        add(Param::Detector,"detector","Pitch detector","Detector",0,1,0,1,"Period|Spectral",true);
-        add(Param::MinimumPitch,"minimum_pitch","Minimum pitch (Hz)","Detector",40,500,77.782,.1,nullptr,true);
+        // Use a new key so pre-YIN preferences/presets select the new default.
+        add(Param::Detector,"pitch_detector","Pitch detector","Detector",0,1,0,1,"YIN|Spectral (legacy)",true);
+        add(Param::MinimumPitch,"minimum_pitch","Minimum pitch (Hz)","Detector",40,500,60,.1,nullptr,true);
         add(Param::MaximumPitch,"maximum_pitch","Maximum pitch (Hz)","Detector",501,4000,1396.913,.1,nullptr,true);
-        add(Param::Threshold,"threshold","Signal threshold","Detector",.001,.5,.03,.001);
+        add(Param::Threshold,"threshold","Spectral signal threshold","Detector",.001,.5,.03,.001);
         add(Param::FilterQuality,"filter_quality","Filter Q","Detector",.1,2,.707,.001);
         add(Param::SmoothingRate,"smoothing_rate","Smoothing (Hz)","Detector",5,4000,2500,1);
         add(Param::SmoothingQuality,"smoothing_quality","Smoothing Q","Detector",.1,2,.707,.001);
         add(Param::FilterLevels,"filter_levels","Filter stages","Detector",1,8,2,1,nullptr,true);
         add(Param::DetectorSplit,"detector_split","Peak sensitivity","Detector",1,100,30,1);
-        add(Param::Feedback,"feedback","Period feedback","Detector",0,.95,.3);
+        add(Param::YinGate,"yin_gate","YIN input gate (RMS)","Detector",.0001,.1,.003,.0001);
         add(Param::FftSize,"fft_size","FFT size","Detector",0,5,3,1,"128|256|512|1024|2048|4096",true);
         add(Param::MorphDensity,"morph_density","Grains per second","Morphizer",1,300,80,1);
         add(Param::MorphRandomDensity,"morph_random_density","Density randomness","Morphizer",0,1,0);

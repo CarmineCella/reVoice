@@ -29,7 +29,7 @@ class MainWindow final : public Fl_Double_Window {
     studio::Meter *inputMeter_ = nullptr, *outputMeter_ = nullptr;
     Fl_Box *status_ = nullptr, *sourceFile_ = nullptr, *audioState_ = nullptr;
     studio::Choice *input_ = nullptr, *output_ = nullptr, *midiInput_ = nullptr,
-                   *midiOutput_ = nullptr, *rate_ = nullptr, *buffer_ = nullptr;
+                   *midiOutput_ = nullptr, *rate_ = nullptr, *buffer_ = nullptr, *inputChannel_ = nullptr;
     bool persistence_ = true, pending_ = false, recordErrorShown_ = false;
     int page_ = 0, voicePage_ = 0;
     double lastMorphLevel_ = .25, lastReverbMix_ = .15;
@@ -52,9 +52,12 @@ class MainWindow final : public Fl_Double_Window {
     void chooseSource();
     void loadPreset();
     void savePreset();
+    void restoreHarmonyMix();
     void loadPreferences();
     void savePreferences();
     void applyDevices();
+    void refreshInputChannels();
+    revoice::AudioSettings selectedDevices() const;
     void closeWindow();
     void tick();
     void transportState();
