@@ -500,6 +500,9 @@ void MainWindow::applyDevices() {
 void MainWindow::loadPreferences() {
     Fl_Preferences prefs(Fl_Preferences::USER,"CarmineCella","reVoice");
     const auto& info=parameterInfo();for(std::size_t i=0;i<parameterCount;++i) {double value; prefs.get(info[i].key.c_str(),value,info[i].initial);parameters_.set(static_cast<Param>(i),value);}
+    // Earlier builds could retain a very quiet harmony mix. Adopt the 0 dB
+    // startup default once, then remember subsequent user adjustments normally.
+    if(!prefs.entryExists("harmony_unity_default")) parameters_.set(Param::HarmonyLevel,1);
     parameters_.sanitize();char path[4096]{};prefs.get("source_file",path,"",sizeof(path));filePath_=path;
     auto device=[&](const char* key,Fl_Choice* widget,const std::vector<Device>& devices) {
         char name[1024]{};prefs.get(key,name,"",sizeof(name));
@@ -514,6 +517,7 @@ void MainWindow::loadPreferences() {
 void MainWindow::savePreferences() {
     Fl_Preferences prefs(Fl_Preferences::USER,"CarmineCella","reVoice");
     const auto& info=parameterInfo();for(std::size_t i=0;i<parameterCount;++i) prefs.set(info[i].key.c_str(),parameters_.values[i]);
+    prefs.set("harmony_unity_default",1);
     prefs.set("source_file",filePath_.c_str());
     prefs.set("audio_input",deviceName(input_,inputs_).c_str());prefs.set("audio_output",deviceName(output_,outputs_).c_str());
     prefs.set("input_channel",inputChannel_->value());

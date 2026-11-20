@@ -75,6 +75,9 @@ and mix** command. It restores voice/mix defaults, clears bypass/freeze and MIDI
 chord gating, and selects YIN while keeping the source and device selections.
 To hear only the harmony, turn **Original** all the way down. Choose **Live input**
 in the header for the microphone; device selection does not change the source.
+Harmony defaults to **0 dB**. This build updates the previous startup preference
+once; subsequent mix adjustments and levels explicitly loaded from presets are
+preserved.
 
 AdaptiveTuner is omitted. A structural change such as detector
 size, grain envelope or device selection restarts the stream. Stop recording

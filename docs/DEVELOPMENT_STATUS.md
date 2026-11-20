@@ -28,9 +28,13 @@ outstanding CI failures and check all remote builds before making that release.
 - Input/output and input-channel selectors are visible in Audio / MIDI, reachable
   through the footer or Cmd/Ctrl+,. Start audio reads current selections rather
   than cached settings. The menu can restore an audible harmony/mix balance.
+- Harmony starts at 0 dB (unity gain). A one-time preference update replaces an
+  older saved startup level; later adjustments and explicit presets retain their
+  chosen levels. The user confirmed the YIN harmonizer works in their test.
 - Updated muted device integration passed: 220.013 Hz, about 3.1% CPU; no live
-  microphone was opened. Audio starts stopped. Manual microphone, listening and
-  physical MIDI checks remain pending.
+  microphone was opened by the automated test. Audio starts stopped. The user
+  confirmed harmonization works; further listening and physical MIDI checks
+  remain part of release validation.
 
 ## Completed
 
