@@ -2,6 +2,7 @@
 // 
 
 #include "../include/WaveletEstimator.h"
+#include <cstring>
 
 WaveletEstimator::WaveletEstimator (SoundInfo* info, int size, double min, 
 	double max, int levels, int coefficients,  

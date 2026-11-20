@@ -2,6 +2,8 @@
 //
 
 #include "../include/AudioFiles.h"
+#include <climits>
+#include <cstring>
     
 #ifdef m_BIG_ENDIAN_
     static inline void m_swap32 (unsigned int &dwData) {

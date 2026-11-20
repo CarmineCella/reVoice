@@ -1,7 +1,7 @@
 #include <windows.h>
 1 VERSIONINFO
-FILEVERSION 0,1,0,0
-PRODUCTVERSION 0,1,0,0
+FILEVERSION @PROJECT_VERSION_MAJOR@,@PROJECT_VERSION_MINOR@,@PROJECT_VERSION_PATCH@,0
+PRODUCTVERSION @PROJECT_VERSION_MAJOR@,@PROJECT_VERSION_MINOR@,@PROJECT_VERSION_PATCH@,0
 FILETYPE VFT_APP
 BEGIN
  BLOCK "StringFileInfo"
@@ -10,9 +10,9 @@ BEGIN
   BEGIN
    VALUE "CompanyName", "Carmine Emanuele Cella\0"
    VALUE "FileDescription", "reVoice vocal harmonizer\0"
-   VALUE "FileVersion", "0.1.0\0"
+   VALUE "FileVersion", "@PROJECT_VERSION@\0"
    VALUE "ProductName", "reVoice\0"
-   VALUE "ProductVersion", "0.1.0\0"
+   VALUE "ProductVersion", "@PROJECT_VERSION@\0"
   END
  END
  BLOCK "VarFileInfo"

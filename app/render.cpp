@@ -9,7 +9,7 @@
 int main(int argc,char** argv) {
     try {
         if(argc<2 || std::string(argv[1])=="--help") {
-            std::cout << "reVoice offline renderer 0.1.0\n"
+            std::cout << "reVoice offline renderer " REVOICE_VERSION "\n"
                 "Usage: revoice-render input.wav output.wav [transpose-semitones]\n"
                 "       revoice-render --tone output.wav [frequency-hz] [seconds]\n";
             return argc<2?1:0;

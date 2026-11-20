@@ -148,7 +148,7 @@ void SpectrumDesigner::design (Pandora::spectralType type,
 		case Pandora::FMLIKE_SPECTRUM: {
 			double modulator = (m_max - m_min) / (double) m_partials;
 			// index == partials !!
-			double amps[m_partials];
+			std::vector<double> amps(static_cast<std::size_t>(m_partials));
 			for (long x = 0; x < m_partials; x++) {
 				long bessOrd = abs (((m_partials / 2) - x));
 				amps[x] = fabs (jn (bessOrd, m_partials));

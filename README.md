@@ -6,7 +6,7 @@ formant-preserving granular pitch shifting, four-voice harmonization, and granul
 morphing. The desktop interface uses FLTK; audio and MIDI use PortAudio and
 PortMidi. Reverb uses STK NRev.
 
-The application is being rebuilt for release 0.1.0. The original FOX sources are
+Version 0.2.0 restores the standalone harmonizer. The original FOX sources are
 archived in `legacy/fox`. AdaptiveTuner is unavailable and is deliberately omitted
 from the rebuilt application. A dependency-free C++ YIN detector is the default;
 the historical Spectral detector remains an optional legacy choice.
@@ -107,7 +107,7 @@ or MIDI hardware. The `pitchshift` suite measures output spectra and MIDI tuning
 After updating `project(VERSION ...)` and the release notes, pushing a `v*` tag
 runs all checks and publishes the packages, full source archive and SHA-256
 checksums as a GitHub release. Release packages are unsigned; Developer ID
-notarization and Windows code signing are not configured in 0.1.
+notarization and Windows code signing are not configured in 0.2.
 
 ## Layout
 

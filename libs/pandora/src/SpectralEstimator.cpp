@@ -2,6 +2,7 @@
 // 
 
 #include "../include/SpectralEstimator.h"
+#include <cstring>
 
 SpectralEstimator::SpectralEstimator (SoundInfo* info, int size, double min, 
 	double max, int levels, double split, double bias, 

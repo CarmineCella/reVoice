@@ -1,8 +1,9 @@
-# Development checkpoint: 0.1.0
+# Development checkpoint: 0.2.0
 
-The Studio black interface and YIN harmony fix are ready for local macOS review.
-These changes have not been pushed. Version 0.1.0 has not yet been tagged or published; fix the
-outstanding CI failures and check all remote builds before making that release.
+The user confirmed that the Studio black interface and YIN harmonizer work.
+Version 0.2.0 is the standalone release baseline. The tagged release workflow
+requires native builds, regression/UI checks and sanitizers before publishing
+packages. Plug-in development follows this standalone checkpoint.
 
 ## Local Studio build
 
@@ -11,7 +12,7 @@ outstanding CI failures and check all remote builds before making that release.
   audio/MIDI settings, recording and existing presets remain available.
 - Design references and prompts: `docs/ui-mockups/`.
 - App: `build/release/app/reVoice.app`.
-- Latest DMG: `reVoice-0.1.0-Studio-YIN-macOS-arm64.dmg`.
+- Release DMG: `reVoice-0.2.0-Darwin-arm64.dmg`.
 - Release build, all thirteen regression suites and the expanded UI smoke test
   pass locally. The UI check exercises sidebar and voice navigation callbacks,
   complete parameter coverage, mirrored controls, custom interval mapping,
@@ -58,18 +59,18 @@ outstanding CI failures and check all remote builds before making that release.
 
 ## Resume here
 
-1. Review the local Studio Mac build. No UI commit has been pushed.
-2. Fix the first CI run's Linux missing-header errors and Windows variable-length
-   array in `SpectrumDesigner.cpp`. Both Mac architectures passed the original
-   build, tests and packaging. The failed logs are in the ignored local file
-   `build/first-ci-failures.log`; run:
-   https://github.com/CarmineCella/reVoice/actions/runs/44415272333
-3. Validate the generated packages and do a manual GUI/control, microphone,
+1. Verify all jobs for the 0.2 release commit at
+   https://github.com/CarmineCella/reVoice/actions. The original Linux header and
+   Windows variable-length array failures are fixed in 0.2.0. The first failed
+   run's logs remain locally in `build/first-ci-failures.log` for reference.
+2. Validate the generated packages and do a manual GUI/control, microphone,
    listening-quality and physical MIDI check. Automated tests do not cover
    physical MIDI hardware or subjective audio quality.
-4. Verify a clean working tree and passing CI at the exact release commit.
-5. Tag `v0.1.0` and push the tag. The tag workflow waits for all builds/tests,
+3. Tag `v0.2.0` at the verified release commit and push the tag. The workflow waits for all builds/tests,
    then publishes native packages, the source archive and SHA-256 checksums.
+4. Develop plug-ins on a separate branch: VST3 for macOS arm64/x86_64, Windows
+   x64 and Linux x86_64, with AUv2 on macOS. Reuse the engine, use the DAW's
+   audio/MIDI and generic parameter editor first, and add the Studio editor later.
 
 Useful commands:
 

@@ -2,6 +2,7 @@
 //
 
 #include "../include/CorrelationEstimator.h"
+#include <cstring>
 
 CorrelationEstimator::CorrelationEstimator (SoundInfo* info, int size, double min,
 	double max, int levels, double threshold, double smoothingRate) :

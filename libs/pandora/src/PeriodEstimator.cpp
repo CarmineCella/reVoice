@@ -2,6 +2,7 @@
 // 
 
 #include "../include/PeriodEstimator.h"
+#include <cstring>
 
 PeriodEstimator::PeriodEstimator (SoundInfo* info, double min, 
 	double max, int levels, int split,    

@@ -2,6 +2,7 @@
 //
 
 #include "../include/DifferentialEstimator.h"
+#include <cstring>
 
 DifferentialEstimator::DifferentialEstimator (SoundInfo* info, int size, double min,
 	double max, int levels, double threshold, double ampThreshold, double smoothingRate) :
