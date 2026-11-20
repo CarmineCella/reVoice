@@ -1,6 +1,6 @@
 {
   "version": 5,
-  "cmakeMinimumRequired": { "major": 3, "minor": 24, "patch": 0 },
+  "cmakeMinimumRequired": { "major": 3, "minor": 25, "patch": 0 },
   "configurePresets": [
     { "name": "default", "displayName": "Release desktop build",
       "binaryDir": "${sourceDir}/build/release",
@@ -8,16 +8,21 @@
     { "name": "debug", "inherits": "default", "binaryDir": "${sourceDir}/build/debug",
       "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug" } },
     { "name": "sanitize", "inherits": "debug", "binaryDir": "${sourceDir}/build/sanitize",
-      "cacheVariables": { "REVOICE_SANITIZERS": "ON", "REVOICE_BUILD_APP": "OFF" } }
+      "cacheVariables": { "REVOICE_SANITIZERS": "ON", "REVOICE_BUILD_APP": "OFF" } },
+    { "name": "plugins", "inherits": "default", "displayName": "VST3 and macOS AU plug-ins",
+      "binaryDir": "${sourceDir}/build/plugins",
+      "cacheVariables": { "REVOICE_BUILD_APP": "OFF", "REVOICE_BUILD_RENDERER": "OFF", "REVOICE_BUILD_PLUGINS": "ON" } }
   ],
   "buildPresets": [
     { "name": "default", "configurePreset": "default", "configuration": "Release" },
     { "name": "debug", "configurePreset": "debug", "configuration": "Debug" },
-    { "name": "sanitize", "configurePreset": "sanitize", "configuration": "Debug" }
+    { "name": "sanitize", "configurePreset": "sanitize", "configuration": "Debug" },
+    { "name": "plugins", "configurePreset": "plugins", "configuration": "Release" }
   ],
   "testPresets": [
     { "name": "default", "configurePreset": "default", "configuration": "Release", "output": { "outputOnFailure": true } },
     { "name": "debug", "configurePreset": "debug", "configuration": "Debug", "output": { "outputOnFailure": true } },
-    { "name": "sanitize", "configurePreset": "sanitize", "configuration": "Debug", "output": { "outputOnFailure": true } }
+    { "name": "sanitize", "configurePreset": "sanitize", "configuration": "Debug", "output": { "outputOnFailure": true } },
+    { "name": "plugins", "configurePreset": "plugins", "configuration": "Release", "output": { "outputOnFailure": true } }
   ]
 }

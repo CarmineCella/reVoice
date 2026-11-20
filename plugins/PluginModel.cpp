@@ -51,7 +51,7 @@ double toNormalized(Param id,double value) {
 }
 bool readState(Steinberg::IBStream* stream,Parameters& parameters) {
     if(!stream) return false;
-    Steinberg::IBStreamer reader(stream,Steinberg::kLittleEndian);
+    Steinberg::IBStreamer reader(stream,kLittleEndian);
     Steinberg::int32 magic=0,version=0,count=0;
     if(!reader.readInt32(magic) || magic!=0x52564331 || !reader.readInt32(version) || version!=1 ||
        !reader.readInt32(count) || count<0 || count>int(parameterCount)) return false;
@@ -66,7 +66,7 @@ bool readState(Steinberg::IBStream* stream,Parameters& parameters) {
 }
 bool writeState(Steinberg::IBStream* stream,const Parameters& parameters) {
     if(!stream) return false;
-    Steinberg::IBStreamer writer(stream,Steinberg::kLittleEndian);
+    Steinberg::IBStreamer writer(stream,kLittleEndian);
     Steinberg::int32 count=0;
     for(std::size_t i=0;i<parameterCount;++i) if(exposed(static_cast<Param>(i))) ++count;
     if(!writer.writeInt32(0x52564331) || !writer.writeInt32(1) || !writer.writeInt32(count)) return false;

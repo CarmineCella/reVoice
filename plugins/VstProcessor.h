@@ -11,13 +11,17 @@ namespace revoice::plugin {
 class VstProcessor final : public Steinberg::Vst::AudioEffect {
     Parameters parameters_;
     std::array<std::atomic<double>,parameterCount> state_{};
+    std::array<std::atomic<double>,parameterCount> incomingState_{};
     std::atomic<std::uint64_t> stateSerial_{0};
-    std::uint64_t appliedSerial_=0;
+    std::atomic<std::uint64_t> appliedSerial_{0};
+    std::atomic<Steinberg::uint32> latency_{0};
+    std::atomic<double> rate_{44100};
     std::unique_ptr<revoice::Processor> processor_;
     std::vector<float> mono_,wet_,dryLeft_,dryRight_,delayLeft_,delayRight_;
     std::size_t delayCursor_=0;
     double bypassMix_=0;
     void applyParameters();
+    bool incomingState(Parameters& parameters,std::uint64_t& serial) const noexcept;
     void render(Steinberg::Vst::ProcessData& data,int offset,int frames) noexcept;
 public:
     VstProcessor();

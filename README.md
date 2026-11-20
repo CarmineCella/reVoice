@@ -11,10 +11,15 @@ archived in `legacy/fox`. AdaptiveTuner is unavailable and is deliberately omitt
 from the rebuilt application. A dependency-free C++ YIN detector is the default;
 the historical Spectral detector remains an optional legacy choice.
 
+The 0.3 development branch adds VST3 and macOS AU plug-ins using the same engine.
+See [plug-in builds and installation](plugins/README.md). The released standalone
+0.2 version remains available on GitHub.
+
 ## Build
 
-Requires CMake 3.24+, a C++17 compiler, Git, and internet access for the first
-configure. Dependencies are fetched from pinned archives with SHA-256 checksums.
+Requires CMake 3.25+, a C++17 compiler, Git, and internet access for the first
+configure. Desktop dependencies use pinned archives with SHA-256 checksums;
+the optional plug-in SDKs use pinned Git revisions.
 On macOS install the Xcode command line tools. On Windows use Visual Studio 2022
 with the Desktop development with C++ workload. On Debian/Ubuntu install:
 
@@ -103,6 +108,9 @@ macOS arm64 and macOS x86_64. Linux additionally runs address, undefined behavio
 and leak checks. Every platform also opens the GUI in a smoke test and uploads
 its package. Audio-device tests are local; hosted CI runners need no microphone
 or MIDI hardware. The `pitchshift` suite measures output spectra and MIDI tuning.
+Separate plug-in jobs build and package VST3 on each platform, with regular and
+MIDI-controlled AU effects on macOS. The official VST3 validator, Apple AU
+validator and synthetic host audio/MIDI tests check the adapters.
 
 After updating `project(VERSION ...)` and the release notes, pushing a `v*` tag
 runs all checks and publishes the packages, full source archive and SHA-256
@@ -115,6 +123,7 @@ notarization and Windows code signing are not configured in 0.2.
 - `engine/`: DSP integration, parameters, device management, recording and WAV I/O.
 - `libs/pandora/`: original audio algorithms and regression fixes.
 - `tests/`: DSP, WAV, queue, memory and real-time regression coverage.
+- `plugins/`: VST3/AU adapters, parameter/state model and host-level tests.
 - `legacy/`: historical application source, excluded from the build.
 - `docs/pandora/`: original framework documentation.
 

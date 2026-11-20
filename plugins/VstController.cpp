@@ -2,6 +2,7 @@
 #include "VstController.h"
 #include "PluginModel.h"
 #include "pluginterfaces/base/ustring.h"
+#include <algorithm>
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
@@ -18,14 +19,14 @@ class HostParameter final : public Parameter {
 public:
     explicit HostParameter(Param id):parameter_(id) {
         const auto& meta=parameterInfo()[static_cast<std::size_t>(id)];
-        info.id=parameterId(id);info.flags=ParameterInfo::kCanAutomate;
+        info.id=parameterId(id);info.flags=Steinberg::Vst::ParameterInfo::kCanAutomate;
         info.stepCount=meta.step==1?int32(meta.maximum-meta.minimum):0;
         if(meta.choices) {
             std::istringstream list(meta.choices);std::string label;
             while(std::getline(list,label,'|')) labels_.push_back(label);
-            info.flags|=ParameterInfo::kIsList;
+            info.flags|=Steinberg::Vst::ParameterInfo::kIsList;
         } else if(meta.minimum==0 && meta.maximum==1 && meta.step==1) labels_={"Off","On"};
-        if(id==Param::Bypass) info.flags|=ParameterInfo::kIsBypass;
+        if(id==Param::Bypass) info.flags|=Steinberg::Vst::ParameterInfo::kIsBypass;
         const auto title=meta.group+": "+meta.label;
         UString(info.title,128).fromAscii(title.c_str());
         UString(info.shortTitle,128).fromAscii(meta.label.c_str());
