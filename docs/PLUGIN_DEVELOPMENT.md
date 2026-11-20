@@ -59,7 +59,9 @@ The local Mac preview is `reVoice-plugins-0.3.0-Darwin-arm64.zip`.
    validation harness kept rewriting its log in the watched Components folder,
    delaying discovery. Logs now use a separate temporary folder. CI stages and
    validates AUs before the process-private AU host test starts Apple's registry.
-   Validation does not restart services or delete registry caches.
+   The disposable GitHub Mac VM also opts into a registrar restart on a discovery
+   miss: Intel images can start it before the user Components folder exists.
+   Local validation never restarts services or deletes registry caches.
 2. Test the built plug-ins in a DAW: discovery, dry/harmony balance, live vocal
    quality, MIDI routing, bypass, project save/reopen and multiple instances.
 3. Adapt the Studio black editor after host integration is confirmed. Review AU

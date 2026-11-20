@@ -121,6 +121,8 @@ jobs:
         run: cmake --build --preset plugins --parallel 3
       - name: Validate Audio Unit
         if: runner.os == 'macOS'
+        env:
+          REVOICE_CI_AU_RESCAN: '1'
         run: bash scripts/validate-au.sh build/plugins/AU/reVoice.component "build/plugins/AU/reVoice MIDI.component"
       - name: Test plug-in adapters, VST3 compliance and DSP
         run: ctest --preset plugins --parallel 3

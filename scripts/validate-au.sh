@@ -59,6 +59,13 @@ validate() {
       cat "$validation_log" >&2
       return "$status"
     fi
+    if [[ "$attempt" -eq 1 && "${GITHUB_ACTIONS:-false}" == true && "${REVOICE_CI_AU_RESCAN:-0}" == 1 ]]; then
+      # Some hosted Intel images start a registrar before the user Components
+      # folder exists. Its stale directory watch never sees the new folder.
+      # The disposable CI VM explicitly opts in; this never runs locally.
+      /bin/ps -axo user,pid,comm | awk '/AudioComponentRegistrar/'
+      sudo -n /usr/bin/killall -9 AudioComponentRegistrar || true
+    fi
     sleep 1
   done
   cat "$validation_log" >&2
