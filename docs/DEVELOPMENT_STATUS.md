@@ -1,9 +1,12 @@
-# Development checkpoint: 0.2.0
+# Development checkpoint: 0.3 plug-in preview
 
 The user confirmed that the Studio black interface and YIN harmonizer work.
 Version 0.2.0 is the standalone release baseline. The tagged release workflow
 requires native builds, regression/UI checks and sanitizers before publishing
-packages. Plug-in development follows this standalone checkpoint.
+packages. The release is published at
+https://github.com/CarmineCella/reVoice/releases/tag/v0.2.0 and its CI passed on
+all four architectures, including Linux sanitizers. Plug-in development is on
+`plugins/vst3-au`; see [the current plug-in checkpoint](PLUGIN_DEVELOPMENT.md).
 
 ## Local Studio build
 
@@ -59,18 +62,15 @@ packages. Plug-in development follows this standalone checkpoint.
 
 ## Resume here
 
-1. Verify all jobs for the 0.2 release commit at
-   https://github.com/CarmineCella/reVoice/actions. The original Linux header and
-   Windows variable-length array failures are fixed in 0.2.0. The first failed
-   run's logs remain locally in `build/first-ci-failures.log` for reference.
-2. Validate the generated packages and do a manual GUI/control, microphone,
-   listening-quality and physical MIDI check. Automated tests do not cover
-   physical MIDI hardware or subjective audio quality.
-3. Tag `v0.2.0` at the verified release commit and push the tag. The workflow waits for all builds/tests,
-   then publishes native packages, the source archive and SHA-256 checksums.
-4. Develop plug-ins on a separate branch: VST3 for macOS arm64/x86_64, Windows
-   x64 and Linux x86_64, with AUv2 on macOS. Reuse the engine, use the DAW's
-   audio/MIDI and generic parameter editor first, and add the Studio editor later.
+1. Check CI for the plug-in pull request at
+   https://github.com/CarmineCella/reVoice/actions and fix platform failures.
+2. Test the macOS plug-in preview in a DAW. Automated tests cover actual shifted
+   audio, host MIDI, automation, project state and latency; subjective audio
+   quality, host-specific routing and physical MIDI need manual checks.
+3. Adapt the Studio black plug-in editor after the host preview is confirmed.
+   The current plug-ins use the DAW's generic controls.
+4. Keep `v0.2.0` unchanged. A new release requires a separate user decision,
+   release notes and verified native packages.
 
 Useful commands:
 
@@ -79,6 +79,8 @@ gh run list --repo CarmineCella/reVoice --limit 5
 cmake --build --preset default --parallel 6
 ctest --preset default
 ctest --preset sanitize
+cmake --build --preset plugins --parallel 6
+ctest --preset plugins
 build/release/app/reVoice.app/Contents/MacOS/reVoice --audio-smoke-test
 ```
 

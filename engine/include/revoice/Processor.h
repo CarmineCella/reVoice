@@ -20,6 +20,7 @@ public:
     void process(const float* input,float* stereoOutput,std::size_t frames,std::size_t inputStride=1) noexcept;
     void midi(unsigned char status,unsigned char note,unsigned char velocity) noexcept;
     double pitch() const noexcept;
+    std::size_t latencySamples() const noexcept;
     float inputPeak() const noexcept;
     float leftPeak() const noexcept;
     float rightPeak() const noexcept;

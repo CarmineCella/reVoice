@@ -2,7 +2,7 @@
 #include "revoice/YinDetector.h"
 #include "Harmonizer.h"
 #include "SpectralEstimator.h"
-#include "NRev.h"
+#include "InstanceReverb.h"
 #include <algorithm>
 #include <array>
 #include <cmath>
@@ -35,7 +35,7 @@ struct Processor::Impl {
     std::unique_ptr<SpectralEstimator> spectral;
     std::unique_ptr<Harmonizer> harmony;
     std::unique_ptr<TableGranulator> morph;
-    std::unique_ptr<stk::NRev> reverbLeft,reverbRight;
+    std::unique_ptr<InstanceReverb> reverbLeft,reverbRight;
     Parameters parameters;
     AudioFile file;
     std::array<int,4> notes{{-1,-1,-1,-1}};
@@ -75,9 +75,8 @@ struct Processor::Impl {
         table.delay(sr*parameters[Param::DelayMs]/1000/table.size());
         harmony=std::make_unique<Harmonizer>(&info,&table,detector,0,1);
         morph=std::make_unique<TableGranulator>(&info,&table,0,1,64);
-        stk::Stk::setSampleRate(sr);
-        reverbLeft=std::make_unique<stk::NRev>(parameters[Param::ReverbTime]);
-        reverbRight=std::make_unique<stk::NRev>(parameters[Param::ReverbTime]);
+        reverbLeft=std::make_unique<InstanceReverb>(sr,parameters[Param::ReverbTime]);
+        reverbRight=std::make_unique<InstanceReverb>(sr,parameters[Param::ReverbTime]);
         if(source) file=*source;
         if(parameters[Param::Source]==3 && file.mono.empty()) throw std::runtime_error("Choose a WAV file before starting playback");
     }
@@ -231,6 +230,10 @@ void Processor::midi(unsigned char status,unsigned char note,unsigned char veloc
     }
 }
 double Processor::pitch() const noexcept { return impl_->yin?impl_->yin->get():impl_->spectral->get(); }
+std::size_t Processor::latencySamples() const noexcept {
+    const auto delay=static_cast<std::size_t>(impl_->rate*impl_->parameters[Param::DelayMs]/1000);
+    return delay?delay-1:0; // The table oscillator advances before its first read.
+}
 float Processor::inputPeak() const noexcept { return impl_->inputPeak; }
 float Processor::leftPeak() const noexcept { return impl_->leftPeak; }
 float Processor::rightPeak() const noexcept { return impl_->rightPeak; }
