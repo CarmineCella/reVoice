@@ -33,6 +33,16 @@ cmake --build --preset default --parallel
 ctest --preset default
 ```
 
+The Studio black interface is built on macOS, Windows and Linux. macOS builds
+default to universal binaries containing both Apple Silicon (`arm64`) and Intel
+(`x86_64`) code, with macOS 11 as the deployment target. The Mac app and plug-in
+packages are named `Darwin-universal`.
+
+For an isolated universal Mac build, use the `macos-universal` preset for the
+desktop app or `macos-plugins-universal` for VST3/AU. A developer can explicitly
+choose a single architecture with `-DCMAKE_OSX_ARCHITECTURES=arm64` or
+`-DCMAKE_OSX_ARCHITECTURES=x86_64`.
+
 For a build without desktop or device dependencies, use
 `cmake -S . -B build/headless -DREVOICE_BUILD_APP=OFF`.
 For memory and undefined behavior checks on Clang/GCC, use the `sanitize` preset.
@@ -111,6 +121,9 @@ or MIDI hardware. The `pitchshift` suite measures output spectra and MIDI tuning
 Separate plug-in jobs build and package VST3 on each platform, with regular and
 MIDI-controlled AU effects on macOS. The official VST3 validator, Apple AU
 validator and synthetic host audio/MIDI tests check the adapters.
+Both Mac runners build universal binaries and verify their architecture slices.
+Tests run natively on Apple Silicon and Intel; one universal Mac package per
+product is uploaded for releases.
 
 After updating `project(VERSION ...)` and the release notes, pushing a `v*` tag
 runs all checks and publishes the packages, full source archive and SHA-256

@@ -1,7 +1,8 @@
 # reVoice plug-in preview
 
-Development builds of reVoice 0.3: VST3 for macOS Apple Silicon/Intel, Windows
-x64 and Linux x86_64; AUv2 for macOS. The standalone 0.2 release is unchanged.
+Development builds of reVoice 0.3: VST3 for macOS, Windows x64 and Linux x86_64;
+AUv2 for macOS. Mac bundles are universal binaries containing Apple Silicon
+(`arm64`) and Intel (`x86_64`) code. The standalone 0.2 release is unchanged.
 
 The plug-ins reuse the YIN/Pandora engine and expose their controls through the
 DAW's generic parameter editor. The Studio black custom editor is a later step.
@@ -63,6 +64,12 @@ cpack --config build/plugins/CPackConfig.cmake -C Release
 The build does not install anything into your DAW's folders. VST3 bundles are in
 `build/plugins/VST3/Release/`; the Mac AUs are in `build/plugins/AU/`. Each AU contains
 its own VST3 binary, so installing the separate VST3 is optional.
+
+On macOS, the `plugins` preset builds universal binaries by default. The separate
+`macos-plugins-universal` preset uses `build/plugins-universal/` if you want to
+keep an existing development build. Packages are named
+`reVoice-plugins-0.3.0-Darwin-universal.zip`. CI verifies the VST3/AU executable
+slices and runs native tests on both Apple Silicon and Intel.
 
 The official VST3 validator runs through CTest. Adapter tests measure shifted
 audio from quiet input, MIDI targets, automation offsets, session recall,

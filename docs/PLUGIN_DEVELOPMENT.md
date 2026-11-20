@@ -53,7 +53,17 @@ Windows x64 and Linux x86_64. The extracted Mac preview passes the VST3 validato
 and both AU host tests; archives preserve executable permissions.
 
 Build and installation details are in [plugins/README.md](../plugins/README.md).
-The local Mac preview is `reVoice-plugins-0.3.0-Darwin-arm64.zip`.
+Mac builds now default to universal (`arm64` + `x86_64`) executables for the
+Studio desktop app, renderer, VST3 and both AU bundles. Isolated build presets
+are `macos-universal` and `macos-plugins-universal`. CI checks every bundle's
+architecture slices and tests on both Mac architectures; only the Apple Silicon
+runner uploads the universal package to avoid duplicate release filenames.
+The Mac preview package is `reVoice-plugins-0.3.0-Darwin-universal.zip`.
+Local universal validation passes all fourteen desktop and sixteen plug-in CTest
+entries. The Studio UI smoke test passes in both native ARM and Intel/Rosetta
+mode; the Intel slices also pass the engine, VST3/AU host tests and all 47 VST3
+validator checks. The Studio app is in `build/universal/app/reVoice.app` and its
+package is `reVoice-0.3.0-Darwin-universal.dmg`.
 
 ## Continue
 
