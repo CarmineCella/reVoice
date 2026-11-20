@@ -55,9 +55,10 @@ The local Mac preview is `reVoice-plugins-0.3.0-Darwin-arm64.zip`.
 ## Continue
 
 1. Check [draft PR #1](https://github.com/CarmineCella/reVoice/pull/1) and all four
-   plug-in CI jobs. The first CI run built/tested every platform; AU discovery
-   on hosted Mac runners required a per-user registrar rescan. The validation
-   script restarts that service only in GitHub Actions, never on a local Mac.
+   plug-in CI jobs. The first CI runs built/tested every platform; the AU
+   validation harness kept rewriting its log in the watched Components folder,
+   delaying discovery. Logs now use a separate temporary folder. Validation
+   does not restart services or delete registry caches.
 2. Test the built plug-ins in a DAW: discovery, dry/harmony balance, live vocal
    quality, MIDI routing, bypass, project save/reopen and multiple instances.
 3. Adapt the Studio black editor after host integration is confirmed. Review AU

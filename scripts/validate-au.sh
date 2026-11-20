@@ -17,8 +17,11 @@ done
 mkdir -p "$component_directory"
 created_count=0
 marker="${component_paths[0]}:${component_paths[1]}:$$"
-owner_file="$component_directory/.reVoice-validation-$$.owner"
-validation_log="$component_directory/.reVoice-validation-$$.log"
+validation_tmp="$(mktemp -d "${TMPDIR:-/tmp}/revoice-auval.XXXXXX")"
+owner_file="$validation_tmp/owner"
+# Keep logs outside Components. Rewriting a file there on every retry keeps
+# Apple's directory watcher busy and can indefinitely postpone its rescan.
+validation_log="$validation_tmp/auval.log"
 printf '%s\n' "$marker" > "$owner_file"
 cleanup() {
   if [[ -f "$owner_file" && "$(cat "$owner_file")" == "$marker" ]]; then
@@ -29,6 +32,7 @@ cleanup() {
     done
     rm -- "$owner_file"
     rm -f -- "$validation_log"
+    rmdir "$validation_tmp"
   fi
 }
 trap cleanup EXIT
@@ -37,12 +41,6 @@ for index in 0 1; do
   created_count=$((created_count+1))
   /usr/bin/ditto "${component_paths[index]}" "${validation_directories[index]}"
 done
-# Hosted macOS runners can retain an empty component registry for the entire
-# job despite filesystem notifications. Restart only that disposable runner's
-# per-user registrar after staging; local validation never restarts services.
-if [[ "${GITHUB_ACTIONS:-false}" == true ]]; then
-  /usr/bin/killall -u "$(id -un)" AudioComponentRegistrar 2>/dev/null || true
-fi
 validate() {
   local status=0
   for attempt in {1..30}; do
