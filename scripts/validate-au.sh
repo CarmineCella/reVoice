@@ -37,10 +37,16 @@ for index in 0 1; do
   created_count=$((created_count+1))
   /usr/bin/ditto "${component_paths[index]}" "${validation_directories[index]}"
 done
+# Hosted macOS runners can retain an empty component registry for the entire
+# job despite filesystem notifications. Restart only that disposable runner's
+# per-user registrar after staging; local validation never restarts services.
+if [[ "${GITHUB_ACTIONS:-false}" == true ]]; then
+  /usr/bin/killall -u "$(id -un)" AudioComponentRegistrar 2>/dev/null || true
+fi
 validate() {
   local status=0
   for attempt in {1..30}; do
-    if /usr/bin/auval -v "$1" "$2" CmCe > "$validation_log" 2>&1; then
+    if /usr/bin/auval -v "$1" "$2" CmCe -strict > "$validation_log" 2>&1; then
       cat "$validation_log"
       return 0
     else
