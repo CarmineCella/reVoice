@@ -119,11 +119,11 @@ jobs:
         run: cmake --preset plugins
       - name: Build plug-ins and validators
         run: cmake --build --preset plugins --parallel 3
-      - name: Test plug-in adapters, VST3 compliance and DSP
-        run: ctest --preset plugins --parallel 3
       - name: Validate Audio Unit
         if: runner.os == 'macOS'
         run: bash scripts/validate-au.sh build/plugins/AU/reVoice.component "build/plugins/AU/reVoice MIDI.component"
+      - name: Test plug-in adapters, VST3 compliance and DSP
+        run: ctest --preset plugins --parallel 3
       - name: Package plug-in previews
         run: cpack --config build/plugins/CPackConfig.cmake -C Release
       - name: Upload plug-in packages

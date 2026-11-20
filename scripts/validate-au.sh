@@ -40,10 +40,13 @@ for index in 0 1; do
   mkdir "${validation_directories[index]}"
   created_count=$((created_count+1))
   /usr/bin/ditto "${component_paths[index]}" "${validation_directories[index]}"
+  /usr/bin/codesign --verify --deep --strict "${validation_directories[index]}"
+  touch "${validation_directories[index]}"
 done
+touch "$component_directory"
 validate() {
   local status=0
-  for attempt in {1..30}; do
+  for attempt in {1..60}; do
     if /usr/bin/auval -v "$1" "$2" CmCe -strict > "$validation_log" 2>&1; then
       cat "$validation_log"
       return 0
@@ -59,6 +62,9 @@ validate() {
     sleep 1
   done
   cat "$validation_log" >&2
+  if [[ "${GITHUB_ACTIONS:-false}" == true ]]; then
+    /usr/bin/log show --last 2m --style compact --predicate 'process == "AudioComponentRegistrar"' | tail -n 80 >&2 || true
+  fi
   return "$status"
 }
 validate aufx rVce
