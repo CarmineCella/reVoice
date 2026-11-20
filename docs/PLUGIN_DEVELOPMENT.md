@@ -48,6 +48,9 @@ sample-offset gain automation, session recall, bypass latency, in-place and
 oversized buffers, finite output and callback allocation counts. VST3 tests also
 exercise state loading during rendering and preservation across reactivation.
 The headless engine/renderer sanitizer build passes all fourteen entries.
+Native CI also passes all nine build/test jobs, including both Mac architectures,
+Windows x64 and Linux x86_64. The extracted Mac preview passes the VST3 validator
+and both AU host tests; archives preserve executable permissions.
 
 Build and installation details are in [plugins/README.md](../plugins/README.md).
 The local Mac preview is `reVoice-plugins-0.3.0-Darwin-arm64.zip`.

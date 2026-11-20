@@ -46,7 +46,7 @@ if(APPLE)
   set_property(TARGET reVoiceVST3 APPEND PROPERTY LINK_DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/VstInfo.plist)
   add_custom_command(TARGET reVoiceVST3 POST_BUILD COMMAND codesign --force --sign - "${vst3_package}")
 endif()
-install(DIRECTORY "${vst3_package}" DESTINATION VST3 COMPONENT Plugins)
+install(DIRECTORY "${vst3_package}" DESTINATION VST3 USE_SOURCE_PERMISSIONS COMPONENT Plugins)
 install(FILES README.md DESTINATION . COMPONENT Plugins)
 
 if(APPLE AND REVOICE_BUILD_AU)
@@ -90,7 +90,7 @@ if(APPLE AND REVOICE_BUILD_AU)
       COMMAND ${CMAKE_COMMAND} -E copy_directory "${vst3_package}" "$<TARGET_BUNDLE_DIR:${target}>/Contents/Resources/plugin.vst3"
       COMMAND ${CMAKE_COMMAND} -E copy_if_different ${audiounitsdk_SOURCE_DIR}/LICENSE.txt "$<TARGET_BUNDLE_DIR:${target}>/Contents/Resources/AudioUnitSDK-LICENSE.txt"
       COMMAND codesign --force --sign - "$<TARGET_BUNDLE_DIR:${target}>")
-    install(DIRECTORY "$<TARGET_BUNDLE_DIR:${target}>" DESTINATION AU COMPONENT Plugins)
+    install(DIRECTORY "$<TARGET_BUNDLE_DIR:${target}>" DESTINATION AU USE_SOURCE_PERMISSIONS COMPONENT Plugins)
   endfunction()
   revoice_add_au(reVoiceAU reVoice org.carminecella.reVoice.au rVce aufx 1)
   revoice_add_au(reVoiceMIDIAU "reVoice MIDI" org.carminecella.reVoice.au-midi rVcM aumf 0)
